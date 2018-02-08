@@ -29,9 +29,9 @@ namespace Newsblast.Server
 
             var codeBase = Assembly.GetExecutingAssembly().CodeBase;
 
-            var dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().CodeBase);
+            var dir = Path.GetDirectoryName(new Uri(codeBase).LocalPath);
 
-            var configFile = new Uri(Path.Combine(dir, ConfigurationFileName)).LocalPath;
+            var configFile = Path.Combine(dir, ConfigurationFileName);
 
             FileStream stream;
 
