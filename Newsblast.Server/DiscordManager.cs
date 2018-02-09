@@ -1,35 +1,30 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
+using Discord;
+using Discord.WebSocket;
 using Newsblast.Shared.Data;
 
 namespace Newsblast.Server
 {
     public class DiscordManager : IDisposable
     {
-        NewsblastContext Context;
-        DiscordClient Client;
+        string Token;
 
-        public DiscordManager(NewsblastContext context, string botToken)
+        NewsblastContext Context;
+        DiscordSocketClient Client;
+
+        public DiscordManager(NewsblastContext context, string token)
         {
             Context = context;
 
-            Client = new DiscordClient(new DiscordConfiguration()
-            {
-                Token = botToken,
-                TokenType = TokenType.Bot,
-                AutoReconnect = true
-            });
+            Client = new DiscordSocketClient();
+            Token = token;
 
-            Client.GuildCreated += GuildCreated;
+            Client.JoinedGuild += JoinedGuild;
             Client.GuildAvailable += GuildAvailable;
-            Client.GuildDeleted += GuildDeleted;
+            Client.LeftGuild += LeftGuild;
             Client.GuildUnavailable += GuildUnavailable;
-
-            Client.MessageCreated += MessageCreated;
         }
 
         public void Dispose()
@@ -39,19 +34,20 @@ namespace Newsblast.Server
 
         public async Task ConnectAsync()
         {
-            await Client.ConnectAsync();
+            await Client.LoginAsync(TokenType.Bot, Token);
+            await Client.StartAsync();
         }
 
         public async Task DisconnectAsync()
         {
-            await Client.DisconnectAsync();
+            await Client.LogoutAsync();
         }
 
-        public async Task SendMessageAsync(ulong channelId, string content = null, DiscordEmbed embed = null)
+        public async Task SendMessageAsync(ulong channelId, string content = null, Embed embed = null)
         {
             try
             {
-                var channel = await Client.GetChannelAsync(channelId);
+                var channel = Client.GetChannel(channelId) as SocketTextChannel;
                 await channel.SendMessageAsync(content, false, embed);
 
                 Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
@@ -64,39 +60,39 @@ namespace Newsblast.Server
             }
         }
 
-        Task GuildCreated(GuildCreateEventArgs e)
+        Task JoinedGuild(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild access created: {e.Guild.Name} ({e.Guild.Id.ToString()})");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild joined: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
-        Task GuildAvailable(GuildCreateEventArgs e)
+        Task GuildAvailable(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild available: {e.Guild.Name} ({e.Guild.Id.ToString()})");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild available: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
-        Task GuildDeleted(GuildDeleteEventArgs e)
+        Task LeftGuild(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild access deleted: {e.Guild.Name} ({e.Guild.Id.ToString()})");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild left: {guild.Name} ({guild.Id.ToString()})");
 
-            var channelIds = e.Guild.Channels.Select(c => c.Id);
+            var channelIds = guild.Channels.Select(c => c.Id);
 
             return Task.CompletedTask;
         }
 
-        Task GuildUnavailable(GuildDeleteEventArgs e)
+        Task GuildUnavailable(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild unavailable: {e.Guild.Name} ({e.Guild.Id.ToString()})");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild unavailable: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
-        Task MessageCreated(MessageCreateEventArgs e)
+        Task MessageReceived(SocketMessage message)
         {
-            if (e.MentionedUsers.Contains(Client.CurrentUser))
+            if (message.MentionedUsers.Contains(Client.CurrentUser))
             {
-                Console.WriteLine($"{DateTime.Now.ToString()} - Discord message created - bot mentioned: {e.Guild.Name} ({e.Guild.Id.ToString()}) -> {e.Channel.Name} ({e.Channel.Id.ToString()})");
-                // SendMessageAsync(e.Channel, $"{e.Message.Author.Mention} Hello!");
+                Console.WriteLine($"{DateTime.Now.ToString()} - Discord message received - bot mentioned: {message.Channel.Id.ToString()}");
+                // SendMessageAsync(message.Channel, $"{message.Author.Mention} Hello!");
             }
 
             return Task.CompletedTask;

@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Discord.Rest;
 using Newsblast.Web.Models;
 
 namespace Newsblast.Web.Controllers
@@ -22,9 +25,13 @@ namespace Newsblast.Web.Controllers
             return View();
         }
 
-        public IActionResult Contact()
+        [Authorize]
+        public async Task<IActionResult> Contact()
         {
-            ViewData["Message"] = "Your contact page.";
+            var discord = new DiscordRestClient();
+            await discord.LoginAsync(Discord.TokenType.Bearer, User.Claims.Where(e => e.Type == "urn:discord:token").Single().Value);
+
+            ViewData["Message"] = $"Hello, {discord.CurrentUser.Username}!";
 
             return View();
         }

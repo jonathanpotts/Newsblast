@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using DSharpPlus.Entities;
 using Newsblast.Shared.Data;
 using Newsblast.Shared.Data.Models;
 
@@ -102,7 +101,7 @@ namespace Newsblast.Server
         {
             try
             {
-                var discordEmbed = new DiscordEmbedBuilder()
+                var discordEmbed = new Discord.EmbedBuilder()
                 .WithAuthor(embed.Source.Name, embed.Source.Url)
                 .WithTitle(embed.Title)
                 .WithUrl(embed.Url)
@@ -114,7 +113,7 @@ namespace Newsblast.Server
                     discordEmbed.WithImageUrl(embed.ImageUrl);
                 }
 
-                await Discord.SendMessageAsync(channelId, null, discordEmbed);
+                await Discord.SendMessageAsync(channelId, null, discordEmbed.Build());
             }
             catch (Exception ex)
             {

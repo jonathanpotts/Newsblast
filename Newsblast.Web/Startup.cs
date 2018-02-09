@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +22,35 @@ namespace Newsblast.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = "Discord";
+            })
+            .AddCookie()
+            .AddOAuth("Discord", options =>
+            {
+                options.ClientId = Configuration["DiscordClientId"];
+                options.ClientSecret = Configuration["DiscordClientSecret"];
+                options.CallbackPath = new PathString("/signin-discord");
+
+                options.AuthorizationEndpoint = "https://discordapp.com/api/oauth2/authorize";
+                options.TokenEndpoint = "https://discordapp.com/api/oauth2/token";
+
+                options.Scope.Add("identify");
+                options.Scope.Add("guilds");
+
+                options.Events = new OAuthEvents
+                {
+                    OnCreatingTicket = context =>
+                    {
+                        context.Identity.AddClaim(new Claim("urn:discord:token", context.AccessToken));
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
             services.AddMvc();
         }
 
@@ -38,6 +68,8 @@ namespace Newsblast.Web
             }
 
             app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {
