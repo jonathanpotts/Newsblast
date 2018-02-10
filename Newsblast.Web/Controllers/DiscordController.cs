@@ -17,7 +17,15 @@ namespace Newsblast.Web.Controllers
             var discord = new DiscordRestClient();
             await discord.LoginAsync(TokenType.Bearer, token);
 
-            var guilds = await discord.GetGuildsAsync();
+            var guilds = await discord.GetGuildSummariesAsync().Single();
+
+            foreach (var guild in guilds)
+            {
+                if (guild.IsOwner)
+                {
+
+                }
+            }
 
             return View();
         }
