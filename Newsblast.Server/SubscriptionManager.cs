@@ -99,28 +99,19 @@ namespace Newsblast.Server
 
         async Task SendEmbedAsync(ulong channelId, Embed embed)
         {
-            try
-            {
-                var discordEmbed = new Discord.EmbedBuilder()
-                .WithAuthor(embed.Source.Name, embed.Source.Url)
-                .WithTitle(embed.Title)
-                .WithUrl(embed.Url)
-                .WithDescription(embed.Description)
-                .WithTimestamp(embed.Date);
+            var discordEmbed = new Discord.EmbedBuilder()
+            .WithAuthor(embed.Source.Name, embed.Source.Url)
+            .WithTitle(embed.Title)
+            .WithUrl(embed.Url)
+            .WithDescription(embed.Description)
+            .WithTimestamp(embed.Date);
 
-                if (embed.ImageUrl != null && embed.ImageUrl.Length > 0)
-                {
-                    discordEmbed.WithImageUrl(embed.ImageUrl);
-                }
-
-                await Discord.SendMessageAsync(channelId, null, discordEmbed.Build());
-            }
-            catch (Exception ex)
+            if (embed.ImageUrl != null && embed.ImageUrl.Length > 0)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to send embed: {ex.Message}");
-                Console.ResetColor();
+                discordEmbed.WithImageUrl(embed.ImageUrl);
             }
+
+            await Discord.SendMessageAsync(channelId, null, discordEmbed.Build());
         }
     }
 }

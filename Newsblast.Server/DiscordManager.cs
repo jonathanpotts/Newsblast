@@ -50,19 +50,10 @@ namespace Newsblast.Server
 
         public async Task SendMessageAsync(ulong channelId, string content = null, Embed embed = null)
         {
-            try
-            {
-                var channel = Client.GetChannel(channelId) as SocketTextChannel;
-                await channel.SendMessageAsync(content, false, embed);
+            var channel = Client.GetChannel(channelId) as SocketTextChannel;
+            await channel.SendMessageAsync(content, false, embed);
 
-                Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to send message: {ex.Message}");
-                Console.ResetColor();
-            }
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
         }
 
         async Task Disconnected(Exception ex)
