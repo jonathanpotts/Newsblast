@@ -9,6 +9,7 @@ namespace Newsblast.Server
 {
     public class DiscordManager : IDisposable
     {
+        bool AutoReconnect = false;
         string Token;
 
         NewsblastContext Context;
@@ -32,14 +33,18 @@ namespace Newsblast.Server
             Client.Dispose();
         }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(bool autoReconnect)
         {
+            AutoReconnect = autoReconnect;
+
             await Client.LoginAsync(TokenType.Bot, Token);
             await Client.StartAsync();
         }
 
         public async Task DisconnectAsync()
         {
+            AutoReconnect = false;
+
             await Client.LogoutAsync();
         }
 
@@ -57,6 +62,36 @@ namespace Newsblast.Server
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"{DateTime.Now.ToString()} - Failed to send message: {ex.Message}");
                 Console.ResetColor();
+            }
+        }
+
+        async Task Disconnected(Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
+            Console.ResetColor();
+
+            if (AutoReconnect)
+            {
+                while (Client.ConnectionState != ConnectionState.Connected)
+                {
+                    if (Client.ConnectionState != ConnectionState.Connecting)
+                    {
+                        Console.WriteLine($"{DateTime.Now.ToString()} - Attempting to reconnect to Discord...");
+
+                        try
+                        {
+                            await ConnectAsync(true);
+                            Console.WriteLine($"{DateTime.Now.ToString()} - Reconnected to Discord.");
+                        }
+                        catch (Exception e)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"{DateTime.Now.ToString()} - Failed to reconnect to Discord: {e.Message}");
+                            Console.ResetColor();
+                        }
+                    }
+                }
             }
         }
 

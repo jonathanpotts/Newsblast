@@ -141,7 +141,7 @@ namespace Newsblast.Server
                     try
                     {
                         Discord = new DiscordManager(Context, token);
-                        await Discord.ConnectAsync();
+                        await Discord.ConnectAsync(true);
 
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("[Success]");
