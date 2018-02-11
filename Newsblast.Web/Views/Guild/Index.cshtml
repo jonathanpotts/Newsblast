@@ -5,7 +5,14 @@
 
 <h2>@ViewData["Title"]</h2>
 
-@foreach (var guild in Model.OrderBy(e => e.Name))
+@if (Model.Count <= 0)
 {
-<a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@guild.Id"><img src="@guild.IconUrl" alt="@guild.Name" class="rounded-circle" /></a>
+    <p>You do not own any servers.</p>
+}
+else
+{
+    @foreach (var guild in Model.OrderBy(e => e.Name))
+    {
+        <a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@guild.Id"><img src="@guild.IconUrl" alt="@guild.Name" class="rounded-circle" /></a>
+    }
 }
