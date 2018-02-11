@@ -4,4 +4,19 @@
     ViewData["Title"] = Model.Name;
 }
 
-<h2><img src="@Model.IconUrl" class="rounded-circle" alt="" /> @Model.Name</h2>
+<h1><img src="@Model.IconUrl" class="rounded-circle" alt="" /> @Model.Name</h1>
+
+@if(!Model.BotConnected)
+{
+    <p>You need to <a asp-area="" asp-controller="Bot" asp-action="Connect" asp-route-guildId="@Model.Id">connect the bot</a>.</p>
+}
+else
+{
+    <p>You are connected to the bot!</p>
+    <ul>
+        @foreach (var channel in Model.Channels)
+        {
+            <li>#@channel.Name</li>
+        }
+    </ul>
+}

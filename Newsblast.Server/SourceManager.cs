@@ -85,7 +85,7 @@ namespace Newsblast.Server
                         var embed = new Embed()
                         {
                             Title = item.Title,
-                            Url = item.Links.Where(e => e.RelationshipType == "alternate").FirstOrDefault()?.Uri.ToString(),
+                            Url = item.Links.FirstOrDefault(e => e.RelationshipType == "alternate")?.Uri.ToString(),
                             Date = item.Published.DateTime,
                             Description = description
                         };

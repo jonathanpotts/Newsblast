@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newsblast.Web.Services;
 
 namespace Newsblast.Web
 {
@@ -57,6 +58,9 @@ namespace Newsblast.Web
                     }
                 };
             });
+
+            services.AddSingleton<DiscordBotClient>();
+            services.AddScoped<DiscordUserClient>();
 
             services.AddMvc();
         }

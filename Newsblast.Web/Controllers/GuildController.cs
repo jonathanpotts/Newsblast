@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -6,23 +7,31 @@ using Microsoft.AspNetCore.Mvc;
 using Discord;
 using Discord.Rest;
 using Newsblast.Web.Models;
+using Newsblast.Web.Services;
 
 namespace Newsblast.Web.Controllers
 {
+    [Route("guild")]
     [Authorize]
     public class GuildController : Controller
     {
-        [Route("/guild")]
+        DiscordUserClient UserClient;
+        DiscordBotClient BotClient;
+
+        public GuildController(DiscordUserClient userClient, DiscordBotClient botClient)
+        {
+            UserClient = userClient;
+            BotClient = botClient;
+        }
+
+        [Route("")]
         public async Task<IActionResult> Index()
         {
-            var token = User.Claims.Where(e => e.Type == "urn:discord:token").Single().Value;
-
-            var discord = new DiscordRestClient();
-            await discord.LoginAsync(TokenType.Bearer, token);
-
             var guilds = new List<Guild>();
 
-            var discordGuilds = (await discord.GetGuildSummariesAsync().Single()).Where(e => e.IsOwner == true);
+            var userClient = await UserClient.GetRestClientAsync();
+
+            var discordGuilds = (await userClient.GetGuildSummariesAsync().First());
 
             foreach (var discordGuild in discordGuilds)
             {
@@ -30,39 +39,58 @@ namespace Newsblast.Web.Controllers
                 {
                     Id = discordGuild.Id,
                     Name = discordGuild.Name,
-                    IconUrl = discordGuild.IconUrl
+                    IconUrl = discordGuild.IconUrl,
+                    IsAdministrator = discordGuild.Permissions.Administrator
                 });
             }
 
             return View(guilds);
         }
 
-        [Route("/guild/{id}")]
+        [Route("{id}")]
         public async Task<IActionResult> Inspect(ulong id)
         {
-            var token = User.Claims.Where(e => e.Type == "urn:discord:token").Single().Value;
+            var userClient = await UserClient.GetRestClientAsync();
 
-            var discord = new DiscordRestClient();
-            await discord.LoginAsync(TokenType.Bearer, token);
+            var userGuild = (await userClient.GetGuildSummariesAsync().First()).FirstOrDefault(e => e.Id == id);
 
-            var discordGuild = (await discord.GetGuildSummariesAsync().Single()).Where(e => e.Id == id).SingleOrDefault();
-
-            if (discordGuild == null)
+            if (userGuild == null)
             {
                 return NotFound();
             }
 
-            if (!discordGuild.IsOwner)
-            {
-                return Unauthorized();
-            }
-
             var guild = new Guild()
             {
-                Id = discordGuild.Id,
-                Name = discordGuild.Name,
-                IconUrl = discordGuild.IconUrl
+                Id = userGuild.Id,
+                Name = userGuild.Name,
+                IconUrl = userGuild.IconUrl,
+                IsAdministrator = userGuild.Permissions.Administrator
             };
+
+            var botClient = await BotClient.GetRestClientAsync();
+
+            try
+            {
+                var botGuild = await botClient.GetGuildAsync(id);
+
+                guild.BotConnected = true;
+
+                guild.Channels = new List<Channel>();
+
+                foreach (var channel in await botGuild.GetTextChannelsAsync())
+                {
+                    guild.Channels.Add(new Channel()
+                    {
+                        Id = channel.Id,
+                        Name = channel.Name,
+                        Guild = guild
+                    });
+                }
+            }
+            catch
+            {
+                guild.BotConnected = false;
+            }
 
             return View(guild);
         }
