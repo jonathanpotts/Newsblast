@@ -67,27 +67,34 @@ namespace Newsblast.Web.Controllers
                 IsAdministrator = userGuild.Permissions.Administrator
             };
 
-            var botClient = await BotClient.GetRestClientAsync();
-
-            try
+            if (guild.IsAdministrator)
             {
-                var botGuild = await botClient.GetGuildAsync(id);
+                var botClient = await BotClient.GetRestClientAsync();
 
-                guild.BotConnected = true;
-
-                guild.Channels = new List<Channel>();
-
-                foreach (var channel in await botGuild.GetTextChannelsAsync())
+                try
                 {
-                    guild.Channels.Add(new Channel()
+                    var botGuild = await botClient.GetGuildAsync(id);
+
+                    guild.BotConnected = true;
+
+                    guild.Channels = new List<Channel>();
+
+                    foreach (var channel in await botGuild.GetTextChannelsAsync())
                     {
-                        Id = channel.Id,
-                        Name = channel.Name,
-                        Guild = guild
-                    });
+                        guild.Channels.Add(new Channel()
+                        {
+                            Id = channel.Id,
+                            Name = channel.Name,
+                            Guild = guild
+                        });
+                    }
+                }
+                catch
+                {
+                    guild.BotConnected = false;
                 }
             }
-            catch
+            else
             {
                 guild.BotConnected = false;
             }

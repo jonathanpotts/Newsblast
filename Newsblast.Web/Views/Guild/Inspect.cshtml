@@ -6,17 +6,24 @@
 
 <h1><img src="@Model.IconUrl" class="rounded-circle" alt="" /> @Model.Name</h1>
 
-@if(!Model.BotConnected)
+@if (Model.IsAdministrator)
 {
-    <p>You need to <a asp-area="" asp-controller="Bot" asp-action="Connect" asp-route-guildId="@Model.Id">connect the bot</a>.</p>
+    @if (!Model.BotConnected)
+    {
+        <p>The Newsblast bot is not connected to @Model.Name. You need to <a asp-area="" asp-controller="Bot" asp-action="Connect" asp-route-guildId="@Model.Id">connect the bot</a> to use Newsblast on @Model.Name.</p>
+    }
+    else
+    {
+        <p>The Newsblast bot is connected to @Model.Name. Here is a list of the channels:</p>
+        <ul>
+            @foreach (var channel in Model.Channels)
+            {
+                <li>#@channel.Name</li>
+            }
+        </ul>
+    }
 }
 else
 {
-    <p>You are connected to the bot!</p>
-    <ul>
-        @foreach (var channel in Model.Channels)
-        {
-            <li>#@channel.Name</li>
-        }
-    </ul>
+    <p>Only server administrators can add or manage the Newsblast bot for their server.</p>
 }
