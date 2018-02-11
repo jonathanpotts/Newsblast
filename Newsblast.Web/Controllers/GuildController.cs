@@ -41,9 +41,28 @@ namespace Newsblast.Web.Controllers
         }
 
         [Route("/guild/{id}")]
-        public IActionResult Inspect(ulong id)
+        public async Task<IActionResult> Inspect(ulong id)
         {
-            return View();
+            var token = User.Claims.Where(e => e.Type == "urn:discord:token").Single().Value;
+
+            var discord = new DiscordRestClient();
+            await discord.LoginAsync(TokenType.Bearer, token);
+
+            var discordGuild = (await discord.GetGuildSummariesAsync().Single()).Where(e => e.Id == id).SingleOrDefault();
+
+            if (discordGuild == null)
+            {
+                return NotFound();
+            }
+
+            var guild = new Guild()
+            {
+                Id = discordGuild.Id,
+                Name = discordGuild.Name,
+                IconUrl = discordGuild.IconUrl
+            };
+
+            return View(guild);
         }
     }
 }
