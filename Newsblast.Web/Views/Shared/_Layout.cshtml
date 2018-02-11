@@ -22,11 +22,15 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link">Home</a>
+                        <a asp-area="" asp-controller="Guild" asp-action="Index" class="nav-link">Servers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-area="" asp-controller="Source" asp-action="Index" class="nav-link">Sources</a>
                     </li>
                 </ul>
+                @await Html.PartialAsync("_LoginPartial")
             </div>
         </div>
     </nav>

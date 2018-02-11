@@ -1,0 +1,11 @@
+﻿    @if (User.Identity.IsAuthenticated)
+    {
+        var token = User.Claims.Where(e => e.Type == "urn:discord:token").Single().Value;
+
+        var discord = new DiscordRestClient();
+        await discord.LoginAsync(TokenType.Bearer, token);
+
+        var user = discord.CurrentUser;
+
+        <span class="text-light"><img src="@user.GetAvatarUrl(ImageFormat.Jpeg, 32)" width="30" height="30" class="rounded-circle d-inline-block align-top" alt="@user.Username" /> @user.Username#@user.Discriminator</span>
+    }
