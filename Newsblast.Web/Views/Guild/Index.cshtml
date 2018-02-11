@@ -1,9 +1,9 @@
 ﻿@model List<Guild>
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Servers You Own";
 }
 
-<h2>Index</h2>
+<h2>@ViewData["Title"]</h2>
 
 @foreach (var guild in Model.OrderBy(e => e.Name))
 {
