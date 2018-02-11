@@ -1,0 +1,16 @@
+﻿@model Source
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>Website: <a href="@Model.Url">@Model.Url</a></p>
+<p>RSS Feed: <a href="@Model.FeedUrl">@Model.FeedUrl</a></p>
+
+@if (Model.Embeds != null && Model.Embeds.Count > 0)
+{
+    <h2>Latest Article</h2>
+
+    @Html.Partial("_EmbedPartial", Model.Embeds.OrderByDescending(e => e.Date).First())
+}

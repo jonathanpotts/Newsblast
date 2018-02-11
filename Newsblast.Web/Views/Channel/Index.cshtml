@@ -1,0 +1,22 @@
+﻿@model ChannelViewModel
+@{
+    ViewData["Title"] = $"{Model.Channel.Guild.Name} - #{Model.Channel.Name}";
+}
+
+<h1>@Model.Channel.Guild.Name</h1>
+<h2>#@Model.Channel.Name</h2>
+
+@if (Model.Channel.Subscriptions.Count > 0)
+{
+    <h3>Subscriptions</h3>
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var sub in Model.Channel.Subscriptions.OrderBy(e => e.Source.Name))
+            {
+                <tr>
+                    <td><a asp-area="" asp-controller="Source" asp-action="Inspect" asp-route-id="@sub.Source.Id">@sub.Source.Name</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,9 @@
+﻿@model Newsblast.Shared.Data.Models.Embed
+
+<div>
+    <p><a href="@Model.Source.Url">@Model.Source.Name</a></p>
+    <p><a href="@Model.Url">@Model.Title</a></p>
+    <p>@Model.Description</p>
+    <p><img src="@Model.ImageUrl" /></p>
+    <p>@Model.Date.ToString()</p>
+</div>

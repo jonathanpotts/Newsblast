@@ -1,7 +1,24 @@
-﻿
+﻿@model List<Source>
 @{
     ViewData["Title"] = "Feeds";
 }
 
 <h1>@ViewData["Title"]</h1>
 
+@if (Model != null && Model.Count > 0)
+{
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var source in Model.OrderBy(e => e.Name))
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Inspect" asp-route-id="@source.Id">@source.Name</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<p>Don't see the feed you want? <a asp-action="Add">Add a new feed.</a></p>

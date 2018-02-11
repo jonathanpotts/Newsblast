@@ -14,13 +14,18 @@
     }
     else
     {
-        <p>The Newsblast bot is connected to @Model.Name. Here is a list of the channels:</p>
-        <ul>
-            @foreach (var channel in Model.Channels)
-            {
-                <li>#@channel.Name</li>
-            }
-        </ul>
+        <p>The Newsblast bot is connected to @Model.Name.</p>
+        <h2>Channels</h2>
+        <table class="table table-striped">
+            <tbody>
+                @foreach (var channel in Model.Channels)
+                {
+                    <tr>
+                        <td><a asp-area="" asp-controller="Channel" asp-action="Index" asp-route-id="@channel.Id">#@channel.Name</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
 }
 else

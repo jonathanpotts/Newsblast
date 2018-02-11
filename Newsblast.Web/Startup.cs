@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newsblast.Shared.Data;
 using Newsblast.Web.Services;
 
 namespace Newsblast.Web
@@ -28,6 +30,11 @@ namespace Newsblast.Web
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.Add(new RequireHttpsAttribute());
+            });
+
+            services.AddDbContextPool<NewsblastContext>(options =>
+            {
+                options.UseSqlServer(Configuration["SqlServerConnectionString"]);
             });
 
             services.AddAuthentication(options =>
