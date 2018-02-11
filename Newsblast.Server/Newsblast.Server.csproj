@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00882" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta" />
     <PackageReference Include="HtmlAgilityPack" Version="1.6.16" />
     <PackageReference Include="Microsoft.SyndicationFeed.ReaderWriter" Version="1.0.2" />
   </ItemGroup>
