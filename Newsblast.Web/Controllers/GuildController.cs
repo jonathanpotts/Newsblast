@@ -22,19 +22,16 @@ namespace Newsblast.Web.Controllers
 
             var guilds = new List<Guild>();
 
-            var discordGuilds = await discord.GetGuildSummariesAsync().Single();
+            var discordGuilds = (await discord.GetGuildSummariesAsync().Single()).Where(e => e.IsOwner == true);
 
             foreach (var discordGuild in discordGuilds)
             {
-                if (discordGuild.IsOwner)
+                guilds.Add(new Guild()
                 {
-                    guilds.Add(new Guild()
-                    {
-                        Id = discordGuild.Id,
-                        Name = discordGuild.Name,
-                        IconUrl = discordGuild.IconUrl
-                    });
-                }
+                    Id = discordGuild.Id,
+                    Name = discordGuild.Name,
+                    IconUrl = discordGuild.IconUrl
+                });
             }
 
             return View(guilds);
@@ -53,6 +50,11 @@ namespace Newsblast.Web.Controllers
             if (discordGuild == null)
             {
                 return NotFound();
+            }
+
+            if (!discordGuild.IsOwner)
+            {
+                return Unauthorized();
             }
 
             var guild = new Guild()
