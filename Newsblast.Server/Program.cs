@@ -16,7 +16,6 @@ namespace Newsblast.Server
         static int MaxParallelUpdates = 5;
         static int MinMinutesBetweenFeedUpdates = 20;
 
-        static NewsblastContext Context;
         static DiscordManager Discord;
         static SourceManager Sources;
         static SubscriptionManager Subscriptions;
@@ -104,8 +103,10 @@ namespace Newsblast.Server
                         var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
                             .UseSqlServer(connectionString);
 
-                        Context = new NewsblastContext(optionsBuilder.Options);
-                        await Context.Database.MigrateAsync();
+                        using (var context = new NewsblastContext(optionsBuilder.Options))
+                        {
+                            await context.Database.MigrateAsync();
+                        }
 
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("[Success]");
