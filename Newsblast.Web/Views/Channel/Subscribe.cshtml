@@ -1,0 +1,16 @@
+﻿@model SubscribeViewModel
+@{
+    ViewData["Title"] = $"{Model.Channel.Guild.Name} - Subscribe #{Model.Channel.Name} to Feed";
+}
+
+<h1>@Model.Channel.Guild.Name</h1>
+<h2>Subscribe #@Model.Channel.Name  to Feed</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="SourceId"></label>
+        @Html.DropDownList("SourceId", new SelectList(Model.Sources.OrderBy(e => e.Name), "Id", "Name"), "", new { @class = "form-control" })
+        <span asp-validation-for="SourceId" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

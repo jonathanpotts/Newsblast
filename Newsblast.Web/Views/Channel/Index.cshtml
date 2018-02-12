@@ -6,7 +6,7 @@
 <h1>@Model.Channel.Guild.Name</h1>
 <h2>#@Model.Channel.Name</h2>
 
-@if (Model.Channel.Subscriptions.Count > 0)
+@if (Model.Channel.Subscriptions != null && Model.Channel.Subscriptions.Count > 0)
 {
     <h3>Subscriptions</h3>
     <table class="table table-striped">
@@ -20,3 +20,5 @@
         </tbody>
     </table>
 }
+
+<p><a asp-action="Subscribe" asp-route-id="@Model.Channel.Id">Subscribe to a feed.</a></p>

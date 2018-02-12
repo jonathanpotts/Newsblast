@@ -108,7 +108,7 @@ namespace Newsblast.Web.Controllers
                     return View();
                 }
 
-                var source = Context.Sources.Add(new Source()
+                var source = await Context.Sources.AddAsync(new Source()
                 {
                     Name = name,
                     Url = url,
