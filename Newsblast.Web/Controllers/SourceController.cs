@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Authorization;
@@ -66,29 +67,37 @@ namespace Newsblast.Web.Controllers
                     return View();
                 }
 
-                var xml = XmlReader.Create(model.FeedUrl, new XmlReaderSettings() { Async = true });
-                var rss = new RssFeedReader(xml);
-
                 var name = "";
                 var url = "";
 
-                while (await rss.Read())
+                try
                 {
-                    if (rss.ElementType == SyndicationElementType.Content && rss.ElementName == "title")
-                    {
-                        var content = await rss.ReadContent();
-                        name = content.Value;
-                    }
-                    else if (rss.ElementType == SyndicationElementType.Link && rss.ElementName == "link")
-                    {
-                        var link = await rss.ReadLink();
-                        url = link.Uri.AbsoluteUri;
-                    }
+                    var xml = XmlReader.Create(model.FeedUrl, new XmlReaderSettings() { Async = true });
+                    var rss = new RssFeedReader(xml);
 
-                    if (name != "" && url != "")
+                    while (await rss.Read())
                     {
-                        break;
+                        if (rss.ElementType == SyndicationElementType.Content && rss.ElementName == "title")
+                        {
+                            var content = await rss.ReadContent();
+                            name = content.Value;
+                        }
+                        else if (rss.ElementType == SyndicationElementType.Link && rss.ElementName == "link")
+                        {
+                            var link = await rss.ReadLink();
+                            url = link.Uri.AbsoluteUri;
+                        }
+
+                        if (name != "" && url != "")
+                        {
+                            break;
+                        }
                     }
+                }
+                catch
+                {
+                    ModelState.AddModelError("FeedUrl", "There was a problem while processing this feed.");
+                    return View();
                 }
 
                 if (name.EndsWith(" RSS Feed"))
