@@ -32,9 +32,15 @@ namespace Newsblast.Web
                 options.Filters.Add(new RequireHttpsAttribute());
             });
 
+            var connectionString = Configuration.GetConnectionString("SqlServerConnectionString");
+            if (connectionString == null)
+            {
+                connectionString = Configuration["SqlServerConnectionString"];
+            }
+
             services.AddDbContextPool<NewsblastContext>(options =>
             {
-                options.UseSqlServer(Configuration["SqlServerConnectionString"]);
+                options.UseSqlServer(connectionString);
             });
 
             services.AddAuthentication(options =>
