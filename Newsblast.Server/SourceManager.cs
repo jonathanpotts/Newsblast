@@ -15,43 +15,61 @@ namespace Newsblast.Server
     public class SourceManager
     {
         const int MaxDescriptionLength = 256;
+        const int MaxEmbeds = 20;
 
-        NewsblastContext Context;
+        string ConnectionString;
 
-        public SourceManager(NewsblastContext context)
+        public SourceManager(string connectionString)
         {
-            Context = context;
+            ConnectionString = connectionString;
         }
 
         public async Task UpdateAsync(int maxParallelUpdates)
         {
             Console.WriteLine($"{DateTime.Now.ToString()} - Updating sources...");
 
-            var sources = await Context.Sources
-                .Include(e => e.Embeds)
-                .Include(e => e.Subscriptions)
-                .Where(e => e.Subscriptions.Count > 0)
-                .ToListAsync();
-
-            var updates = new List<Task>();
-
-            foreach (var source in sources)
+            try
             {
-                updates.Add(UpdateEmbedsAsync(source));
+                List<Source> sources = null;
 
-                if (updates.Count >= maxParallelUpdates)
+                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(ConnectionString);
+
+                using (var context = new NewsblastContext(optionsBuilder.Options))
+                {
+                    sources = await context.Sources
+                        .Include(e => e.Subscriptions)
+                        .Where(e => e.Subscriptions.Count > 0)
+                        .ToListAsync();
+                }
+
+                var updates = new List<Task>();
+
+                foreach (var source in sources)
+                {
+                    updates.Add(UpdateEmbedsAsync(source));
+
+                    if (updates.Count >= maxParallelUpdates)
+                    {
+                        await Task.WhenAll(updates);
+                        updates.Clear();
+                    }
+                }
+
+                if (updates.Count > 0)
                 {
                     await Task.WhenAll(updates);
-                    updates.Clear();
                 }
-            }
 
-            if (updates.Count > 0)
+                Console.WriteLine($"{DateTime.Now.ToString()} - Sources processed: {sources.Count()}");
+            }
+            catch (Exception ex)
             {
-                await Task.WhenAll(updates);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to process sources...");
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
             }
-
-            Console.WriteLine($"{DateTime.Now.ToString()} - Sources processed: {sources.Count()}");
         }
 
         async Task UpdateEmbedsAsync(Source source)
@@ -60,46 +78,67 @@ namespace Newsblast.Server
 
             try
             {
-                var xml = XmlReader.Create(source.FeedUrl, new XmlReaderSettings() { Async = true });
-                var rss = new RssFeedReader(xml);
+                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(ConnectionString);
 
-                source.Embeds.Clear();
-
-                while (await rss.Read())
+                using (var context = new NewsblastContext(optionsBuilder.Options))
                 {
-                    if (rss.ElementType == SyndicationElementType.Item)
+                    var trackedSource = context.Sources
+                        .Include(e => e.Embeds)
+                        .First(e => e.Id == source.Id);
+
+                    var xml = XmlReader.Create(trackedSource.FeedUrl, new XmlReaderSettings() { Async = true });
+                    var rss = new RssFeedReader(xml);
+
+                    while (await rss.Read())
                     {
-                        var item = await rss.ReadItem();
-
-                        var html = new HtmlDocument();
-                        html.LoadHtml(item.Description);
-
-                        var description = HtmlEntity.DeEntitize(html.DocumentNode.InnerText);
-
-                        if (description.Length > MaxDescriptionLength)
+                        if (rss.ElementType == SyndicationElementType.Item)
                         {
-                            description = description.Substring(0, description.Substring(0, (MaxDescriptionLength - 4)).LastIndexOf(" "));
-                            description += " ...";
+                            var item = await rss.ReadItem();
+
+                            var html = new HtmlDocument();
+                            html.LoadHtml(item.Description);
+
+                            var description = HtmlEntity.DeEntitize(html.DocumentNode.InnerText);
+
+                            if (description.Length > MaxDescriptionLength)
+                            {
+                                description = description.Substring(0, description.Substring(0, (MaxDescriptionLength - 4)).LastIndexOf(" "));
+                                description += " ...";
+                            }
+
+                            var embed = new Embed()
+                            {
+                                Title = item.Title,
+                                Url = item.Links.FirstOrDefault(e => e.RelationshipType == "alternate")?.Uri.ToString(),
+                                Date = item.Published.DateTime,
+                                Description = description
+                            };
+
+                            if (trackedSource.Embeds.FirstOrDefault(e => e.Url == embed.Url) == null)
+                            {
+                                var web = new HtmlWeb();
+                                html = await web.LoadFromWebAsync(embed.Url);
+
+                                embed.ImageUrl = html.DocumentNode.SelectSingleNode("//meta[@property='og:image']")?.GetAttributeValue("content", null);
+
+                                trackedSource.Embeds.Add(embed);
+                            }
                         }
-
-                        var embed = new Embed()
-                        {
-                            Title = item.Title,
-                            Url = item.Links.FirstOrDefault(e => e.RelationshipType == "alternate")?.Uri.ToString(),
-                            Date = item.Published.DateTime,
-                            Description = description
-                        };
-
-                        var web = new HtmlWeb();
-                        html = await web.LoadFromWebAsync(embed.Url);
-
-                        embed.ImageUrl = html.DocumentNode.SelectSingleNode("//meta[@property='og:image']")?.GetAttributeValue("content", null);
-
-                        source.Embeds.Add(embed);
                     }
-                }
 
-                await Context.SaveChangesAsync();
+                    if (trackedSource.Embeds.Count > MaxEmbeds)
+                    {
+                        var oldEmbeds = trackedSource.Embeds.OrderByDescending(e => e.Date).TakeLast(trackedSource.Embeds.Count - MaxEmbeds);
+
+                        foreach (var oldEmbed in oldEmbeds)
+                        {
+                            trackedSource.Embeds.Remove(oldEmbed);
+                        }
+                    }
+
+                    await context.SaveChangesAsync();
+                }
 
                 Console.WriteLine($"{DateTime.Now.ToString()} - Source updated: {source.Name}");
             }

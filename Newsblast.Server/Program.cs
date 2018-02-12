@@ -86,7 +86,7 @@ namespace Newsblast.Server
 
             if (startupSucceeded)
             {
-                Console.Write($"{DateTime.Now.ToString()} - Connecting to SQL Server...".PadRight(60));
+                Console.Write($"{DateTime.Now.ToString()} - Migrating SQL Server database...".PadRight(60));
 
                 if (connectionString == null || connectionString.Length <= 0)
                 {
@@ -140,7 +140,7 @@ namespace Newsblast.Server
                 {
                     try
                     {
-                        Discord = new DiscordManager(Context, token);
+                        Discord = new DiscordManager(connectionString, token);
                         await Discord.ConnectAsync(true);
 
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -176,8 +176,8 @@ namespace Newsblast.Server
             Console.WriteLine();
             Console.ResetColor();
 
-            Sources = new SourceManager(Context);
-            Subscriptions = new SubscriptionManager(Context, Discord);
+            Sources = new SourceManager(connectionString);
+            Subscriptions = new SubscriptionManager(connectionString, Discord);
 
             while (true)
             {

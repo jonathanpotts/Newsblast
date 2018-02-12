@@ -10,12 +10,12 @@ namespace Newsblast.Server
 {
     public class SubscriptionManager
     {
-        NewsblastContext Context;
+        string ConnectionString;
         DiscordManager Discord;
 
-        public SubscriptionManager(NewsblastContext context, DiscordManager discord)
+        public SubscriptionManager(string connectionString, DiscordManager discord)
         {
-            Context = context;
+            ConnectionString = connectionString;
             Discord = discord;
         }
 
@@ -23,30 +23,47 @@ namespace Newsblast.Server
         {
             Console.WriteLine($"{DateTime.Now.ToString()} - Updating subscriptions...");
 
-            var subscriptions = await Context.Subscriptions
-                .Include(e => e.Source)
-                .ThenInclude(e => e.Embeds)
-                .ToListAsync();
-
-            var updates = new List<Task>();
-
-            foreach (var subscription in subscriptions)
+            try
             {
-                updates.Add(UpdateSubscriptionAsync(subscription));
+                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(ConnectionString);
 
-                if (updates.Count >= maxParallelUpdates)
+                List<Subscription> subscriptions = null;
+
+                using (var context = new NewsblastContext(optionsBuilder.Options))
+                {
+                    subscriptions = await context.Subscriptions
+                        .Include(e => e.Source)
+                        .ToListAsync();
+                }
+
+                var updates = new List<Task>();
+
+                foreach (var subscription in subscriptions)
+                {
+                    updates.Add(UpdateSubscriptionAsync(subscription));
+
+                    if (updates.Count >= maxParallelUpdates)
+                    {
+                        await Task.WhenAll(updates);
+                        updates.Clear();
+                    }
+                }
+
+                if (updates.Count > 0)
                 {
                     await Task.WhenAll(updates);
-                    updates.Clear();
                 }
-            }
 
-            if (updates.Count > 0)
+                Console.WriteLine($"{DateTime.Now.ToString()} - Subscriptions processed: {subscriptions.Count().ToString()}");
+            }
+            catch (Exception ex)
             {
-                await Task.WhenAll(updates);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to process subscriptions...");
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
             }
-
-            Console.WriteLine($"{DateTime.Now.ToString()} - Subscriptions processed: {subscriptions.Count().ToString()}");
         }
 
         async Task UpdateSubscriptionAsync(Subscription subscription)
@@ -55,36 +72,47 @@ namespace Newsblast.Server
 
             try
             {
-                var embeds = subscription.Source.Embeds.OrderBy(e => e.Date);
+                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(ConnectionString);
 
-                if (subscription.LastDate == null || subscription.LastDate == new DateTime())
+                using (var context = new NewsblastContext(optionsBuilder.Options))
                 {
-                    var embed = embeds.LastOrDefault();
+                    var trackedSubscription = context.Subscriptions
+                        .Include(e => e.Source)
+                        .ThenInclude(e => e.Embeds)
+                        .First(e => e.Id == subscription.Id);
 
-                    if (embed != null)
-                    {
-                        await SendEmbedAsync(subscription.ChannelId, embed);
+                    var embeds = trackedSubscription.Source.Embeds.OrderBy(e => e.Date);
 
-                        subscription.LastDate = embed.Date;
-                    }
-                }
-                else
-                {
-                    foreach (var embed in embeds)
+                    if (trackedSubscription.LastDate == null || trackedSubscription.LastDate == new DateTime())
                     {
-                        if (subscription.LastDate < embed.Date)
+                        var embed = embeds.LastOrDefault();
+
+                        if (embed != null)
                         {
-                            await SendEmbedAsync(subscription.ChannelId, embed);
+                            await SendEmbedAsync(trackedSubscription.ChannelId, embed);
+
+                            trackedSubscription.LastDate = embed.Date;
+                        }
+                    }
+                    else
+                    {
+                        foreach (var embed in embeds)
+                        {
+                            if (trackedSubscription.LastDate < embed.Date)
+                            {
+                                await SendEmbedAsync(trackedSubscription.ChannelId, embed);
+                            }
+                        }
+
+                        if (embeds.Count() > 0)
+                        {
+                            trackedSubscription.LastDate = embeds.Last().Date;
                         }
                     }
 
-                    if (embeds.Count() > 0)
-                    {
-                        subscription.LastDate = embeds.Last().Date;
-                    }
+                    await context.SaveChangesAsync();
                 }
-
-                await Context.SaveChangesAsync();
 
                 Console.WriteLine($"{DateTime.Now.ToString()} - Subscription updated: {subscription.Source.Name} -> {subscription.ChannelId.ToString()}");
             }

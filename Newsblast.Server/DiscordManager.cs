@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Discord;
 using Discord.WebSocket;
 using Newsblast.Shared.Data;
@@ -9,14 +10,14 @@ namespace Newsblast.Server
 {
     public class DiscordManager : IDisposable
     {
+        string ConnectionString;
         string Token;
 
-        NewsblastContext Context;
         DiscordSocketClient Client;
 
-        public DiscordManager(NewsblastContext context, string token)
+        public DiscordManager(string connectionString, string token)
         {
-            Context = context;
+            ConnectionString = connectionString;
 
             Client = new DiscordSocketClient();
             Token = token;
@@ -73,13 +74,35 @@ namespace Newsblast.Server
             return Task.CompletedTask;
         }
 
-        Task LeftGuild(SocketGuild guild)
+        async Task LeftGuild(SocketGuild guild)
         {
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild left: {guild.Name} ({guild.Id.ToString()})");
 
-            var channelIds = guild.Channels.Select(c => c.Id);
+            try
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(ConnectionString);
 
-            return Task.CompletedTask;
+                using (var context = new NewsblastContext(optionsBuilder.Options))
+                {
+                    var channelIds = guild.Channels.Select(c => c.Id);
+                    var subscriptions = context.Subscriptions.Where(e => channelIds.Contains(e.ChannelId));
+
+                    foreach (var subscription in subscriptions)
+                    {
+                        context.Subscriptions.Remove(subscription);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to remove subscriptions...");
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+            }
         }
 
         Task GuildUnavailable(SocketGuild guild)
