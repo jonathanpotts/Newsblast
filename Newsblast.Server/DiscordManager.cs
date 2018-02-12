@@ -44,7 +44,7 @@ namespace Newsblast.Server
             await Client.LogoutAsync();
         }
 
-        public async Task SendMessageAsync(ulong channelId, string content = null, Embed embed = null)
+        public async Task SendMessageAsync(ulong channelId, string content = "", Embed embed = null)
         {
             var channel = Client.GetChannel(channelId) as SocketTextChannel;
             await channel.SendMessageAsync(content, false, embed);

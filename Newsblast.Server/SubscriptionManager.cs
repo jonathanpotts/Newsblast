@@ -57,7 +57,7 @@ namespace Newsblast.Server
             {
                 var embeds = subscription.Source.Embeds.OrderBy(e => e.Date);
 
-                if (subscription.LastDate == null)
+                if (subscription.LastDate == null || subscription.LastDate == new DateTime())
                 {
                     var embed = embeds.LastOrDefault();
 
@@ -72,7 +72,7 @@ namespace Newsblast.Server
                 {
                     foreach (var embed in embeds)
                     {
-                        if (subscription.LastDate == null || subscription.LastDate < embed.Date)
+                        if (subscription.LastDate < embed.Date)
                         {
                             await SendEmbedAsync(subscription.ChannelId, embed);
                         }
@@ -100,7 +100,7 @@ namespace Newsblast.Server
         async Task SendEmbedAsync(ulong channelId, Embed embed)
         {
             var discordEmbed = new Discord.EmbedBuilder()
-            .WithAuthor(embed.Source.Name, embed.Source.Url)
+            .WithAuthor(embed.Source.Name, null, embed.Source.Url)
             .WithTitle(embed.Title)
             .WithUrl(embed.Url)
             .WithDescription(embed.Description)
@@ -111,7 +111,7 @@ namespace Newsblast.Server
                 discordEmbed.WithImageUrl(embed.ImageUrl);
             }
 
-            await Discord.SendMessageAsync(channelId, null, discordEmbed.Build());
+            await Discord.SendMessageAsync(channelId, "", discordEmbed.Build());
         }
     }
 }
