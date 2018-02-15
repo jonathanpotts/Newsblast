@@ -87,42 +87,44 @@ namespace Newsblast.Server
                         .Include(e => e.Embeds)
                         .First(e => e.Id == source.Id);
 
-                    var xml = XmlReader.Create(trackedSource.FeedUrl, new XmlReaderSettings() { Async = true });
-                    var rss = new RssFeedReader(xml);
-
-                    while (await rss.Read())
+                    using (var xml = XmlReader.Create(trackedSource.FeedUrl, new XmlReaderSettings() { Async = true }))
                     {
-                        if (rss.ElementType == SyndicationElementType.Item)
+                        var rss = new RssFeedReader(xml);
+
+                        while (await rss.Read())
                         {
-                            var item = await rss.ReadItem();
-
-                            var html = new HtmlDocument();
-                            html.LoadHtml(item.Description);
-
-                            var description = HtmlEntity.DeEntitize(html.DocumentNode.InnerText);
-
-                            if (description.Length > MaxDescriptionLength)
+                            if (rss.ElementType == SyndicationElementType.Item)
                             {
-                                description = description.Substring(0, description.Substring(0, (MaxDescriptionLength - 4)).LastIndexOf(" "));
-                                description += " ...";
-                            }
+                                var item = await rss.ReadItem();
 
-                            var embed = new Embed()
-                            {
-                                Title = item.Title,
-                                Url = item.Links.FirstOrDefault(e => e.RelationshipType == "alternate")?.Uri.ToString(),
-                                Date = item.Published.DateTime,
-                                Description = description
-                            };
+                                var html = new HtmlDocument();
+                                html.LoadHtml(item.Description);
 
-                            if (trackedSource.Embeds.FirstOrDefault(e => e.Url == embed.Url) == null)
-                            {
-                                var web = new HtmlWeb();
-                                html = await web.LoadFromWebAsync(embed.Url);
+                                var description = HtmlEntity.DeEntitize(html.DocumentNode.InnerText);
 
-                                embed.ImageUrl = html.DocumentNode.SelectSingleNode("//meta[@property='og:image']")?.GetAttributeValue("content", null);
+                                if (description.Length > MaxDescriptionLength)
+                                {
+                                    description = description.Substring(0, description.Substring(0, (MaxDescriptionLength - 4)).LastIndexOf(" "));
+                                    description += " ...";
+                                }
 
-                                trackedSource.Embeds.Add(embed);
+                                var embed = new Embed()
+                                {
+                                    Title = item.Title,
+                                    Url = item.Links.FirstOrDefault(e => e.RelationshipType == "alternate")?.Uri.ToString(),
+                                    Date = item.Published.UtcDateTime,
+                                    Description = description
+                                };
+
+                                if (trackedSource.Embeds.FirstOrDefault(e => e.Url == embed.Url) == null)
+                                {
+                                    var web = new HtmlWeb();
+                                    html = await web.LoadFromWebAsync(embed.Url);
+
+                                    embed.ImageUrl = html.DocumentNode.SelectSingleNode("//meta[@property='og:image']")?.GetAttributeValue("content", null);
+
+                                    trackedSource.Embeds.Add(embed);
+                                }
                             }
                         }
                     }

@@ -6,7 +6,7 @@
 <h1>@Model.Channel.Guild.Name</h1>
 <h2>Subscribe #@Model.Channel.Name  to Feed</h2>
 
-<p><strong>NOTE: It can take up to 20 minutes for a subscription to go live.</strong></p>
+<p><strong>NOTE: It can take up to @Constants.TimeBetweenUpdatesInMinutes @(Constants.TimeBetweenUpdatesInMinutes == 1 ? "minute" : "minutes") for a subscription to go live.</strong></p>
 
 <form method="post">
     <div class="form-group">

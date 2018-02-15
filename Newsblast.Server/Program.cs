@@ -5,6 +5,7 @@ using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newsblast.Server.Models;
+using Newsblast.Shared;
 using Newsblast.Shared.Data;
 
 namespace Newsblast.Server
@@ -14,7 +15,6 @@ namespace Newsblast.Server
         const string ConfigurationFileName = "Newsblast.Server.json";
 
         static int MaxParallelUpdates = 5;
-        static int MinMinutesBetweenFeedUpdates = 20;
 
         static DiscordManager Discord;
         static SourceManager Sources;
@@ -142,7 +142,7 @@ namespace Newsblast.Server
                     try
                     {
                         Discord = new DiscordManager(connectionString, token);
-                        await Discord.ConnectAsync(true);
+                        await Discord.ConnectAsync();
 
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("[Success]");
@@ -182,8 +182,8 @@ namespace Newsblast.Server
 
             while (true)
             {
-                Console.WriteLine($"{DateTime.Now.ToString()} - Starting updates... at least {MinMinutesBetweenFeedUpdates.ToString()} {(MinMinutesBetweenFeedUpdates != 1 ? "minutes" : "minute")} must elapse before next update cycle.");
-                await Task.WhenAll(UpdateAsync(), Task.Delay(new TimeSpan(0, MinMinutesBetweenFeedUpdates, 0)));
+                Console.WriteLine($"{DateTime.Now.ToString()} - Starting updates... at least {Constants.TimeBetweenUpdatesInMinutes.ToString()} {(Constants.TimeBetweenUpdatesInMinutes != 1 ? "minutes" : "minute")} must elapse before next update cycle.");
+                await Task.WhenAll(UpdateAsync(), Task.Delay(new TimeSpan(0, Constants.TimeBetweenUpdatesInMinutes, 0)));
             }
         }
 

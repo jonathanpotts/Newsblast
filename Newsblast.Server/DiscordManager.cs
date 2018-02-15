@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Discord;
@@ -10,10 +11,13 @@ namespace Newsblast.Server
 {
     public class DiscordManager : IDisposable
     {
+        const int timeoutInSeconds = 30;
+
         string ConnectionString;
         string Token;
 
         DiscordSocketClient Client;
+        CancellationTokenSource CancellationToken;
 
         public DiscordManager(string connectionString, string token)
         {
@@ -21,6 +25,8 @@ namespace Newsblast.Server
 
             Client = new DiscordSocketClient();
             Token = token;
+
+            CancellationToken = new CancellationTokenSource();
 
             Client.Disconnected += Disconnected;
             Client.JoinedGuild += JoinedGuild;
@@ -34,7 +40,7 @@ namespace Newsblast.Server
             Client.Dispose();
         }
 
-        public async Task ConnectAsync(bool autoReconnect)
+        public async Task ConnectAsync()
         {
             await Client.LoginAsync(TokenType.Bot, Token);
             await Client.StartAsync();
@@ -53,11 +59,38 @@ namespace Newsblast.Server
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
         }
 
+        Task Connected()
+        {
+            Console.WriteLine($"{DateTime.Now.ToString()} - Discord connected.");
+
+            CancellationToken.Cancel();
+            CancellationToken.Dispose();
+            CancellationToken = new CancellationTokenSource();
+
+            return Task.CompletedTask;
+        }
+
         Task Disconnected(Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {timeoutInSeconds} seconds to allow Discord time to reconnect.");
             Console.ResetColor();
+
+            Task.Delay(timeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
+            {
+                if (Client.ConnectionState != ConnectionState.Connected)
+                {
+                    Client.Dispose();
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{DateTime.Now.ToString()} - Discord failed to reconnect. Resetting client...");
+                    Console.ResetColor();
+
+                    Client = new DiscordSocketClient();
+                    await ConnectAsync();
+                }
+            });
 
             return Task.CompletedTask;
         }

@@ -72,25 +72,27 @@ namespace Newsblast.Web.Controllers
 
                 try
                 {
-                    var xml = XmlReader.Create(model.FeedUrl, new XmlReaderSettings() { Async = true });
-                    var rss = new RssFeedReader(xml);
-
-                    while (await rss.Read())
+                    using (var xml = XmlReader.Create(model.FeedUrl, new XmlReaderSettings() { Async = true }))
                     {
-                        if (rss.ElementType == SyndicationElementType.Content && rss.ElementName == "title")
-                        {
-                            var content = await rss.ReadContent();
-                            name = content.Value;
-                        }
-                        else if (rss.ElementType == SyndicationElementType.Link && rss.ElementName == "link")
-                        {
-                            var link = await rss.ReadLink();
-                            url = link.Uri.AbsoluteUri;
-                        }
+                        var rss = new RssFeedReader(xml);
 
-                        if (name != "" && url != "")
+                        while (await rss.Read())
                         {
-                            break;
+                            if (rss.ElementType == SyndicationElementType.Content && rss.ElementName == "title")
+                            {
+                                var content = await rss.ReadContent();
+                                name = content.Value;
+                            }
+                            else if (rss.ElementType == SyndicationElementType.Link && rss.ElementName == "link")
+                            {
+                                var link = await rss.ReadLink();
+                                url = link.Uri.AbsoluteUri;
+                            }
+
+                            if (name != "" && url != "")
+                            {
+                                break;
+                            }
                         }
                     }
                 }
