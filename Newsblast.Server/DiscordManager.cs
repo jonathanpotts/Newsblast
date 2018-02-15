@@ -16,6 +16,8 @@ namespace Newsblast.Server
         string ConnectionString;
         string Token;
 
+        bool AwaitingReconnect;
+
         DiscordSocketClient Client;
         CancellationTokenSource CancellationToken;
 
@@ -23,16 +25,10 @@ namespace Newsblast.Server
         {
             ConnectionString = connectionString;
 
-            Client = new DiscordSocketClient();
             Token = token;
+            CreateClient();
 
             CancellationToken = new CancellationTokenSource();
-
-            Client.Disconnected += Disconnected;
-            Client.JoinedGuild += JoinedGuild;
-            Client.GuildAvailable += GuildAvailable;
-            Client.LeftGuild += LeftGuild;
-            Client.GuildUnavailable += GuildUnavailable;
         }
 
         public void Dispose()
@@ -59,10 +55,38 @@ namespace Newsblast.Server
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
         }
 
+        void CreateClient()
+        {
+            Client = new DiscordSocketClient();
+
+            Client.Connected += Connected;
+            Client.Disconnected += Disconnected;
+            Client.JoinedGuild += JoinedGuild;
+            Client.GuildAvailable += GuildAvailable;
+            Client.LeftGuild += LeftGuild;
+            Client.GuildUnavailable += GuildUnavailable;
+        }
+
+        async Task ResetClientAsync()
+        {
+            if (Client.ConnectionState != ConnectionState.Connected)
+            {
+                Client.Dispose();
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{DateTime.Now.ToString()} - Resetting Discord client...");
+                Console.ResetColor();
+
+                CreateClient();
+                await ConnectAsync();
+            }
+        }
+
         Task Connected()
         {
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord connected.");
 
+            AwaitingReconnect = false;
             CancellationToken.Cancel();
             CancellationToken.Dispose();
             CancellationToken = new CancellationTokenSource();
@@ -72,25 +96,31 @@ namespace Newsblast.Server
 
         Task Disconnected(Exception ex)
         {
+            
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
-            Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
             Console.ResetColor();
 
-            Task.Delay(TimeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
+            if (!AwaitingReconnect)
             {
-                if (Client.ConnectionState != ConnectionState.Connected)
+                AwaitingReconnect = true;
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
+                Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
+                Console.ResetColor();
+
+                Task.Delay(TimeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
                 {
-                    Client.Dispose();
+                    while (AwaitingReconnect)
+                    {
+                        await ResetClientAsync();
 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{DateTime.Now.ToString()} - Discord failed to reconnect. Resetting client...");
-                    Console.ResetColor();
-
-                    Client = new DiscordSocketClient();
-                    await ConnectAsync();
-                }
-            });
+                        await Task.Delay(TimeoutInSeconds * 1000);
+                    }
+                    
+                });
+            }
 
             return Task.CompletedTask;
         }
