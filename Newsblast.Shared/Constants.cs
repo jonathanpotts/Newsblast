@@ -6,6 +6,6 @@ namespace Newsblast.Shared
 {
     public static class Constants
     {
-        public static int TimeBetweenUpdatesInMinutes = 20;
+        public const int TimeBetweenUpdatesInMinutes = 20;
     }
 }

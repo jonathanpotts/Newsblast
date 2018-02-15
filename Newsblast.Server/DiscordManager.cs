@@ -11,7 +11,7 @@ namespace Newsblast.Server
 {
     public class DiscordManager : IDisposable
     {
-        const int timeoutInSeconds = 30;
+        const int TimeoutInSeconds = 30;
 
         string ConnectionString;
         string Token;
@@ -74,10 +74,10 @@ namespace Newsblast.Server
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
-            Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {timeoutInSeconds} seconds to allow Discord time to reconnect.");
+            Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
             Console.ResetColor();
 
-            Task.Delay(timeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
+            Task.Delay(TimeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
             {
                 if (Client.ConnectionState != ConnectionState.Connected)
                 {

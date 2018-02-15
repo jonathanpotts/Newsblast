@@ -13,8 +13,7 @@ namespace Newsblast.Server
     class Program
     {
         const string ConfigurationFileName = "Newsblast.Server.json";
-
-        static int MaxParallelUpdates = 5;
+        const int MaxParallelUpdates = 5;
 
         static DiscordManager Discord;
         static SourceManager Sources;
