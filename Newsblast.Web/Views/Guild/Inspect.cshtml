@@ -4,7 +4,16 @@
     ViewData["Title"] = Model.Name;
 }
 
-<h1><img src="@Model.IconUrl" class="rounded-circle" alt="" /> @Model.Name</h1>
+@if (Model.IconUrl != null)
+{
+    <img src="@Model.IconUrl" width="128" height="128" alt="" class="rounded-circle" />
+}
+else
+{
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAMAAAAoyzS7AAAAA1BMVEVyidp8SJksAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==" width="128" height="128" alt="" class="rounded-circle" />
+}
+
+<h1>@Model.Name</h1>
 
 @if (Model.IsAdministrator)
 {

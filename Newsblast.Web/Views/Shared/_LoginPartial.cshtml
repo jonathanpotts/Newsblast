@@ -5,5 +5,12 @@
     var client = await discordUserClient.GetRestClientAsync();
     var user = client.CurrentUser;
 
-    <span class="text-light"><img src="@user.GetAvatarUrl(ImageFormat.Jpeg, 32)" width="30" height="30" class="rounded-circle d-inline-block align-top" alt="@user.Username" /> @user.Username#@user.Discriminator</span>
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <span class="nav-link">Hello, @user.Username#@user.Discriminator!</span>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">Logout</a>
+        </li>
+    </ul>
 }

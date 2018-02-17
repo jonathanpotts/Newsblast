@@ -1,0 +1,27 @@
+﻿$color: #fff;
+$link-color: #0096cf;
+$bg-color: #36393e;
+$nav-bg-color: #202225;
+$embed-bg-color: #32363b;
+
+body {
+    &.bg-dark {
+        background-color: $bg-color !important;
+    }
+
+    &.text-white {
+        color: $color;
+        
+        hr {
+            border-color: $color;
+        }
+    }
+}
+
+nav {
+    &.navbar {
+        &.bg-dark {
+            background-color: $nav-bg-color !important;
+        }
+    }
+}
