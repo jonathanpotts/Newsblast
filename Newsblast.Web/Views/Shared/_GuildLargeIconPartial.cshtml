@@ -1,0 +1,10 @@
+﻿@model Guild
+
+@if (Model.IconUrl != null)
+{
+    <img src="@Model.IconUrl" class="rounded-circle large-icon m-2" alt="" aria-hidden="true" />
+}
+else
+{
+    <div class="rounded-circle large-icon mx-auto my-2" aria-hidden="true"></div>
+}

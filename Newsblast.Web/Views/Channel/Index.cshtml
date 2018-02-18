@@ -3,13 +3,25 @@
     ViewData["Title"] = $"{Model.Channel.Guild.Name} - #{Model.Channel.Name}";
 }
 
-<h1>@Model.Channel.Guild.Name</h1>
-<h2>#@Model.Channel.Name</h2>
+<div class="text-center">
+    @Html.Partial("_GuildLargeIconPartial", Model.Channel.Guild)
+    <hgroup>
+        <h1><a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@Model.Channel.Guild.Id">@Model.Channel.Guild.Name</a></h1>
+        <h2>#@Model.Channel.Name</h2>
+    </hgroup>
+</div>
+
+
+<div class="py-2"></div>
+
+<p><a asp-action="Subscribe" asp-route-id="@Model.Channel.Id">Subscribe to a feed.</a></p>
+
+<div class="py-2"></div>
 
 @if (Model.Channel.Subscriptions != null && Model.Channel.Subscriptions.Count > 0)
 {
     <h3>Subscriptions</h3>
-    <table class="table table-striped">
+    <table class="table table-striped table-dark">
         <tbody>
             @foreach (var sub in Model.Channel.Subscriptions.OrderBy(e => e.Source.Name))
             {
@@ -20,5 +32,3 @@
         </tbody>
     </table>
 }
-
-<p><a asp-action="Subscribe" asp-route-id="@Model.Channel.Id">Subscribe to a feed.</a></p>

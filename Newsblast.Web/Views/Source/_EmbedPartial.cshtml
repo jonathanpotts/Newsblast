@@ -1,9 +1,11 @@
 ﻿@model Newsblast.Shared.Data.Models.Embed
 
-<div>
-    <p><a href="@Model.Source.Url">@Model.Source.Name</a></p>
-    <p><a href="@Model.Url">@Model.Title</a></p>
-    <p>@Model.Description</p>
-    <p><img src="@Model.ImageUrl" /></p>
-    <p>@Model.Date.ToString()</p>
+<div class="row">
+    <div class="col-md-8 col-lg-6 m-3 rounded discord-embed">
+        <p class="my-1 discord-embed-author"><strong><a href="@Model.Source.Url">@Model.Source.Name</a></strong></p>
+        <p class="my-1"><a href="@Model.Url">@Model.Title</a></p>
+        <p class="my-1">@Model.Description</p>
+        <p class="my-1"><img src="@Url.Action("Image", new { embedId = Model.Id })" class="rounded img-fluid" alt="" aria-hidden="true" /></p>
+        <p class="my-1 discord-embed-date">@Model.Date.ToString()</p>
+    </div>
 </div>

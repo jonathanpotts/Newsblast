@@ -3,10 +3,16 @@
     ViewData["Title"] = Model.Name;
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1 class="text-center">@ViewData["Title"]</h1>
 
-<p>Website: <a href="@Model.Url">@Model.Url</a></p>
-<p>RSS Feed: <a href="@Model.FeedUrl">@Model.FeedUrl</a></p>
+<div class="py-2"></div>
+
+<div class="text-center">
+    <p>Website: <a href="@Model.Url">@Model.Url</a></p>
+    <p>RSS Feed: <a href="@Model.FeedUrl">@Model.FeedUrl</a></p>
+</div>
+
+<div class="py-2"></div>
 
 @if (Model.Embeds != null && Model.Embeds.Count > 0)
 {

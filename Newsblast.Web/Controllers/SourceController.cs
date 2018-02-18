@@ -1,5 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Authorization;
@@ -132,6 +133,29 @@ namespace Newsblast.Web.Controllers
             }
 
             return View();
+        }
+
+        [Route("image/{embedId}")]
+        public async Task<IActionResult> Image(string embedId)
+        {
+            var embed = Context.Embeds
+                .Where(e => e.Id == embedId)
+                .FirstOrDefault();
+
+            if (embed == null || embed.ImageUrl == null)
+            {
+                return NotFound();
+            }
+
+            var client = new HttpClient();
+            var response = await client.GetAsync(embed.ImageUrl);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return StatusCode((int)response.StatusCode);
+            }
+
+            return new FileStreamResult(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType.MediaType);
         }
     }
 }

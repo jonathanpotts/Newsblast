@@ -3,10 +3,17 @@
     ViewData["Title"] = $"{Model.Channel.Guild.Name} - Subscribe #{Model.Channel.Name} to Feed";
 }
 
-<h1>@Model.Channel.Guild.Name</h1>
-<h2>Subscribe #@Model.Channel.Name  to Feed</h2>
+<div class="text-center">
+    @Html.Partial("_GuildLargeIconPartial", Model.Channel.Guild)
+    <h1><a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@Model.Channel.Guild.Id">@Model.Channel.Guild.Name</a></h1>
+    <h2>Subscribe <a asp-action="Index" asp-route-id="@Model.Channel.Id">#@Model.Channel.Name</a> to Feed</h2>
+</div>
 
-<p><strong>NOTE: It can take up to @Constants.TimeBetweenUpdatesInMinutes @(Constants.TimeBetweenUpdatesInMinutes == 1 ? "minute" : "minutes") for a subscription to go live.</strong></p>
+<div class="py-2"></div>
+
+<p class="text-center"><strong>NOTE: It can take up to @Constants.TimeBetweenUpdatesInMinutes @(Constants.TimeBetweenUpdatesInMinutes == 1 ? "minute" : "minutes") for a subscription to go live.</strong></p>
+
+<div class="py-2"></div>
 
 <form method="post">
     <div class="form-group">
