@@ -13,7 +13,7 @@ namespace Newsblast.Server
     {
         const int TimeoutInSeconds = 30;
 
-        string ConnectionString;
+        DbContextOptions<NewsblastContext> ContextOptions;
         string Token;
 
         bool AwaitingReconnect;
@@ -21,9 +21,9 @@ namespace Newsblast.Server
         DiscordSocketClient Client;
         CancellationTokenSource CancellationToken;
 
-        public DiscordManager(string connectionString, string token)
+        public DiscordManager(DbContextOptions<NewsblastContext> contextOptions, string token)
         {
-            ConnectionString = connectionString;
+            ContextOptions = contextOptions;
 
             Token = token;
             CreateClient();
@@ -143,10 +143,7 @@ namespace Newsblast.Server
 
             try
             {
-                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(ConnectionString);
-
-                using (var context = new NewsblastContext(optionsBuilder.Options))
+                using (var context = new NewsblastContext(ContextOptions))
                 {
                     var channelIds = guild.Channels.Select(c => c.Id);
                     var subscriptions = context.Subscriptions.Where(e => channelIds.Contains(e.ChannelId));

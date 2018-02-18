@@ -59,6 +59,8 @@ namespace Newsblast.Server
             var connectionString = "";
             var token = "";
 
+            DbContextOptions<NewsblastContext> contextOptions = null;
+
             try
             {
                 stream = File.OpenRead(configFile);
@@ -99,10 +101,11 @@ namespace Newsblast.Server
                 {
                     try
                     {
-                        var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(connectionString);
+                        contextOptions = new DbContextOptionsBuilder<NewsblastContext>()
+                            .UseSqlServer(connectionString)
+                            .Options;
 
-                        using (var context = new NewsblastContext(optionsBuilder.Options))
+                        using (var context = new NewsblastContext(contextOptions))
                         {
                             await context.Database.MigrateAsync();
                         }
@@ -140,7 +143,7 @@ namespace Newsblast.Server
                 {
                     try
                     {
-                        Discord = new DiscordManager(connectionString, token);
+                        Discord = new DiscordManager(contextOptions, token);
                         await Discord.ConnectAsync();
 
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -176,8 +179,8 @@ namespace Newsblast.Server
             Console.WriteLine();
             Console.ResetColor();
 
-            Sources = new SourceManager(connectionString);
-            Subscriptions = new SubscriptionManager(connectionString, Discord);
+            Sources = new SourceManager(contextOptions);
+            Subscriptions = new SubscriptionManager(contextOptions, Discord);
 
             while (true)
             {

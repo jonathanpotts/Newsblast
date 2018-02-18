@@ -10,12 +10,12 @@ namespace Newsblast.Server
 {
     public class SubscriptionManager
     {
-        string ConnectionString;
+        DbContextOptions<NewsblastContext> ContextOptions;
         DiscordManager Discord;
 
-        public SubscriptionManager(string connectionString, DiscordManager discord)
+        public SubscriptionManager(DbContextOptions<NewsblastContext> contextOptions, DiscordManager discord)
         {
-            ConnectionString = connectionString;
+            ContextOptions = contextOptions;
             Discord = discord;
         }
 
@@ -25,12 +25,9 @@ namespace Newsblast.Server
 
             try
             {
-                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(ConnectionString);
-
                 List<Subscription> subscriptions = null;
 
-                using (var context = new NewsblastContext(optionsBuilder.Options))
+                using (var context = new NewsblastContext(ContextOptions))
                 {
                     subscriptions = await context.Subscriptions
                         .Include(e => e.Source)
@@ -72,10 +69,7 @@ namespace Newsblast.Server
 
             try
             {
-                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(ConnectionString);
-
-                using (var context = new NewsblastContext(optionsBuilder.Options))
+                using (var context = new NewsblastContext(ContextOptions))
                 {
                     var trackedSubscription = context.Subscriptions
                         .Include(e => e.Source)

@@ -17,11 +17,11 @@ namespace Newsblast.Server
         const int MaxDescriptionLength = 256;
         const int MaxEmbeds = 20;
 
-        string ConnectionString;
+        DbContextOptions<NewsblastContext> ContextOptions;
 
-        public SourceManager(string connectionString)
+        public SourceManager(DbContextOptions<NewsblastContext> contextOptions)
         {
-            ConnectionString = connectionString;
+            ContextOptions = contextOptions;
         }
 
         public async Task UpdateAsync(int maxParallelUpdates)
@@ -32,10 +32,7 @@ namespace Newsblast.Server
             {
                 List<Source> sources = null;
 
-                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(ConnectionString);
-
-                using (var context = new NewsblastContext(optionsBuilder.Options))
+                using (var context = new NewsblastContext(ContextOptions))
                 {
                     sources = await context.Sources
                         .Include(e => e.Subscriptions)
@@ -78,10 +75,7 @@ namespace Newsblast.Server
 
             try
             {
-                var optionsBuilder = new DbContextOptionsBuilder<NewsblastContext>()
-                            .UseSqlServer(ConnectionString);
-
-                using (var context = new NewsblastContext(optionsBuilder.Options))
+                using (var context = new NewsblastContext(ContextOptions))
                 {
                     var trackedSource = context.Sources
                         .Include(e => e.Embeds)

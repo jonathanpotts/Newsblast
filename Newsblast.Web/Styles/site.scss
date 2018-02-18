@@ -18,10 +18,14 @@ body {
     }
 }
 
-nav {
-    &.navbar {
-        &.bg-dark {
-            background-color: $nav-bg-color !important;
-        }
+.navbar {
+    &.bg-dark {
+        background-color: $nav-bg-color !important;
+    }
+}
+
+.btn {
+    &.btn-link {
+        transition: none;
     }
 }
