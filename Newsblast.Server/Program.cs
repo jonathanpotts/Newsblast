@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 using Microsoft.EntityFrameworkCore;
 using Newsblast.Server.Models;
 using Newsblast.Shared;
@@ -15,22 +17,30 @@ namespace Newsblast.Server
     class Program
     {
         const string ConfigurationFileName = "Newsblast.Server.json";
+        const string LogFileName = "Newsblast.Server.log";
         const int MaxParallelUpdates = 5;
 
         static async Task Main(string[] args)
         {
+            var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+
+            var dir = Path.GetDirectoryName(new Uri(codeBase).LocalPath);
+
+            var logFile = Path.Combine(dir, LogFileName);
+
+            var serilog = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File(logFile)
+                .CreateLogger();
+
             var logger = new LoggerFactory()
-                .AddConsole()
-                .AddDebug()
+                .AddSerilog(serilog, dispose: true)
                 .CreateLogger<Program>();
 
             var startupSucceeded = true;
 
             var ser = new DataContractJsonSerializer(typeof(Configuration));
-
-            var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-
-            var dir = Path.GetDirectoryName(new Uri(codeBase).LocalPath);
 
             var configFile = Path.Combine(dir, ConfigurationFileName);
 
@@ -163,8 +173,7 @@ namespace Newsblast.Server
             while (true)
             {
                 logger.LogInformation($"Starting updates. " +
-                    $"At least {Constants.TimeBetweenUpdatesInMinutes.ToString()} {(Constants.TimeBetweenUpdatesInMinutes != 1 ? "minutes" : "minute")} must elapse before next update cycle. " +
-                    $"Current time is {DateTime.UtcNow.ToString()}.");
+                    $"At least {Constants.TimeBetweenUpdatesInMinutes.ToString()} {(Constants.TimeBetweenUpdatesInMinutes != 1 ? "minutes" : "minute")} must elapse before next update cycle. ");
 
                 await Task.WhenAll(Task.Run(async () =>
                 {
