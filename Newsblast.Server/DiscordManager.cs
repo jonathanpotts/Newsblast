@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Discord;
 using Discord.WebSocket;
@@ -13,6 +14,7 @@ namespace Newsblast.Server
     {
         const int TimeoutInSeconds = 30;
 
+        ILogger Logger;
         DbContextOptions<NewsblastContext> ContextOptions;
         string Token;
 
@@ -21,8 +23,9 @@ namespace Newsblast.Server
         DiscordSocketClient Client;
         CancellationTokenSource CancellationToken;
 
-        public DiscordManager(DbContextOptions<NewsblastContext> contextOptions, string token)
+        public DiscordManager(ILogger logger, DbContextOptions<NewsblastContext> contextOptions, string token)
         {
+            Logger = logger;
             ContextOptions = contextOptions;
 
             Token = token;
@@ -52,7 +55,7 @@ namespace Newsblast.Server
             var channel = Client.GetChannel(channelId) as SocketTextChannel;
             await channel.SendMessageAsync(content, false, embed);
 
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
+            Logger.LogInformation($"Discord message sent: {channel.Guild.Name} ({channel.Guild.Id.ToString()}) -> {channel.Name} ({channel.Id.ToString()})");
         }
 
         void CreateClient()
@@ -73,9 +76,7 @@ namespace Newsblast.Server
             {
                 Client.Dispose();
 
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Resetting Discord client...");
-                Console.ResetColor();
+                Logger.LogWarning("Resetting Discord client.");
 
                 CreateClient();
                 await ConnectAsync();
@@ -84,7 +85,7 @@ namespace Newsblast.Server
 
         Task Connected()
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord connected.");
+            Logger.LogInformation("Discord client connected.");
 
             AwaitingReconnect = false;
             CancellationToken.Cancel();
@@ -96,19 +97,11 @@ namespace Newsblast.Server
 
         Task Disconnected(Exception ex)
         {
-            
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
-            Console.ResetColor();
-
             if (!AwaitingReconnect)
             {
                 AwaitingReconnect = true;
 
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Discord disconnected: {ex.Message}");
-                Console.WriteLine($"{DateTime.Now.ToString()} - Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
-                Console.ResetColor();
+                Logger.LogWarning(ex, $"Discord client disconnected. Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
 
                 Task.Delay(TimeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
                 {
@@ -121,25 +114,29 @@ namespace Newsblast.Server
                     
                 });
             }
+            else
+            {
+                Logger.LogWarning(ex, "Discord client disconnected.");
+            }
 
             return Task.CompletedTask;
         }
 
         Task JoinedGuild(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild joined: {guild.Name} ({guild.Id.ToString()})");
+            Logger.LogInformation($"Discord guild joined: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
         Task GuildAvailable(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild available: {guild.Name} ({guild.Id.ToString()})");
+            Logger.LogInformation($"Discord guild available: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
         async Task LeftGuild(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild left: {guild.Name} ({guild.Id.ToString()})");
+            Logger.LogInformation($"Discord guild left: {guild.Name} ({guild.Id.ToString()})");
 
             try
             {
@@ -158,16 +155,13 @@ namespace Newsblast.Server
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to remove subscriptions...");
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.LogError(ex, "Failed to remove subscriptions.");
             }
         }
 
         Task GuildUnavailable(SocketGuild guild)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Discord guild unavailable: {guild.Name} ({guild.Id.ToString()})");
+            Logger.LogWarning($"Discord guild unavailable: {guild.Name} ({guild.Id.ToString()})");
             return Task.CompletedTask;
         }
 
@@ -175,7 +169,7 @@ namespace Newsblast.Server
         {
             if (message.MentionedUsers.Contains(Client.CurrentUser))
             {
-                Console.WriteLine($"{DateTime.Now.ToString()} - Discord message received - bot mentioned: {message.Channel.Id.ToString()}");
+                Logger.LogInformation($"Discord message received - bot mentioned: {message.Channel.Id.ToString()}");
                 // SendMessageAsync(message.Channel, $"{message.Author.Mention} Hello!");
             }
 

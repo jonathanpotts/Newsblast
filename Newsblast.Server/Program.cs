@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Newsblast.Server.Models;
 using Newsblast.Shared;
@@ -15,12 +17,13 @@ namespace Newsblast.Server
         const string ConfigurationFileName = "Newsblast.Server.json";
         const int MaxParallelUpdates = 5;
 
-        static DiscordManager Discord;
-        static SourceManager Sources;
-        static SubscriptionManager Subscriptions;
-
         static async Task Main(string[] args)
         {
+            var logger = new LoggerFactory()
+                .AddConsole()
+                .AddDebug()
+                .CreateLogger<Program>();
+
             var startupSucceeded = true;
 
             var ser = new DataContractJsonSerializer(typeof(Configuration));
@@ -37,20 +40,16 @@ namespace Newsblast.Server
             {
                 try
                 {
-                    stream = File.Create(configFile);
+                    using (stream = File.Create(configFile))
+                    {
+                        ser.WriteObject(stream, new Configuration());
 
-                    ser.WriteObject(stream, new Configuration());
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{ConfigurationFileName} needs to be updated before the server can start.");
-                    Console.ResetColor();
-
+                        logger.LogCritical($"{ConfigurationFileName} needs to be updated before the server can start.");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{ConfigurationFileName} could not be created: {ex.Message}");
-                    Console.ResetColor();
+                    logger.LogCritical(ex, $"{ConfigurationFileName} could not be created.");
                 }
 
                 Environment.Exit(-1);
@@ -63,39 +62,35 @@ namespace Newsblast.Server
 
             try
             {
-                stream = File.OpenRead(configFile);
-                var config = (Configuration)ser.ReadObject(stream);
-
-                if (config != null)
+                using (stream = File.OpenRead(configFile))
                 {
-                    connectionString = config.SqlServerConnectionString;
-                    token = config.DiscordBotToken;
+                    var config = (Configuration)ser.ReadObject(stream);
+
+                    if (config != null)
+                    {
+                        connectionString = config.SqlServerConnectionString;
+                        token = config.DiscordBotToken;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{ConfigurationFileName} could not be read: {ex.Message}");
-                Console.ResetColor();
+                logger.LogCritical(ex, $"{ConfigurationFileName} could not be read.");
 
                 Environment.Exit(-1);
             }
 
-            Console.WriteLine($"{DateTime.Now.ToString()} - Newsblast.Server starting up...");
-            Console.WriteLine();
+            logger.LogInformation("Newsblast.Server starting up.");
 
             if (startupSucceeded)
             {
-                Console.Write($"{DateTime.Now.ToString()} - Migrating SQL Server database...".PadRight(60));
+                logger.LogInformation("Migrating database.");
 
                 if (connectionString == null || connectionString.Length <= 0)
                 {
                     startupSucceeded = false;
 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("[Fail]");
-                    Console.WriteLine($"SqlServerConnectionString is missing from {ConfigurationFileName}.");
-                    Console.ResetColor();
+                    logger.LogCritical($"SqlServerConnectionString is missing from {ConfigurationFileName}.");
                 }
                 else
                 {
@@ -110,54 +105,43 @@ namespace Newsblast.Server
                             await context.Database.MigrateAsync();
                         }
 
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("[Success]");
-                        Console.ResetColor();
+                        logger.LogInformation("Successfully migrated database.");
                     }
                     catch (Exception ex)
                     {
                         startupSucceeded = false;
 
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("[Fail]");
-                        Console.WriteLine(ex.Message);
-                        Console.ResetColor();
+                        logger.LogCritical(ex, "Failed to migrate database.");
                     }
                 }
             }
 
+            DiscordManager discord = null;
+
             if (startupSucceeded)
             {
-                Console.Write($"{DateTime.Now.ToString()} - Connecting to Discord...".PadRight(60));
+                logger.LogInformation("Connecting to Discord.");
 
                 if (token == null || token.Length <= 0)
                 {
                     startupSucceeded = false;
 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("[Fail]");
-                    Console.WriteLine($"DiscordBotToken is missing from {ConfigurationFileName}.");
-                    Console.ResetColor();
+                    logger.LogCritical($"DiscordBotToken is missing from {ConfigurationFileName}.");
                 }
                 else
                 {
                     try
                     {
-                        Discord = new DiscordManager(contextOptions, token);
-                        await Discord.ConnectAsync();
+                        discord = new DiscordManager(logger, contextOptions, token);
+                        await discord.ConnectAsync();
 
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("[Success]");
-                        Console.ResetColor();
+                        logger.LogInformation("Successfully connected to Discord.");
                     }
                     catch (Exception ex)
                     {
                         startupSucceeded = false;
 
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("[Fail]");
-                        Console.WriteLine(ex.Message);
-                        Console.ResetColor();
+                        logger.LogCritical(ex, "Failed to connect to Discord.");
                     }
                 }
             }
@@ -166,33 +150,29 @@ namespace Newsblast.Server
 
             if (!startupSucceeded)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Startup has failed.");
-                Console.WriteLine();
-                Console.ResetColor();
+                logger.LogCritical("Startup has failed.");
 
                 Environment.Exit(-1);
             }
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"{DateTime.Now.ToString()} - Startup was successful.");
-            Console.WriteLine();
-            Console.ResetColor();
+            logger.LogInformation("Startup was successful.");
 
-            Sources = new SourceManager(contextOptions);
-            Subscriptions = new SubscriptionManager(contextOptions, Discord);
+            var sources = new SourceManager(logger, contextOptions);
+            var subscriptions = new SubscriptionManager(logger, contextOptions, discord);
 
             while (true)
             {
-                Console.WriteLine($"{DateTime.Now.ToString()} - Starting updates... at least {Constants.TimeBetweenUpdatesInMinutes.ToString()} {(Constants.TimeBetweenUpdatesInMinutes != 1 ? "minutes" : "minute")} must elapse before next update cycle.");
-                await Task.WhenAll(UpdateAsync(), Task.Delay(new TimeSpan(0, Constants.TimeBetweenUpdatesInMinutes, 0)));
-            }
-        }
+                logger.LogInformation($"Starting updates. " +
+                    $"At least {Constants.TimeBetweenUpdatesInMinutes.ToString()} {(Constants.TimeBetweenUpdatesInMinutes != 1 ? "minutes" : "minute")} must elapse before next update cycle. " +
+                    $"Current time is {DateTime.UtcNow.ToString()}.");
 
-        static async Task UpdateAsync()
-        {
-            await Sources.UpdateAsync(MaxParallelUpdates);
-            await Subscriptions.UpdateAsync(MaxParallelUpdates);
+                await Task.WhenAll(Task.Run(async () =>
+                {
+                    await sources.UpdateAsync(MaxParallelUpdates);
+                    await subscriptions.UpdateAsync(MaxParallelUpdates);
+                }),
+                Task.Delay(new TimeSpan(0, Constants.TimeBetweenUpdatesInMinutes, 0)));
+            }
         }
     }
 }

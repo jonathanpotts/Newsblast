@@ -22,11 +22,13 @@ namespace Newsblast.Web.Controllers
 
                 if (token != null)
                 {
-                    var client = new HttpClient();
-                    await client.PostAsync("https://discordapp.com/api/oauth2/token/revoke", new FormUrlEncodedContent(new []
+                    using (var client = new HttpClient())
                     {
-                        new KeyValuePair<string, string>("token", token)
-                    }));
+                        await client.PostAsync("https://discordapp.com/api/oauth2/token/revoke", new FormUrlEncodedContent(new[]
+                        {
+                            new KeyValuePair<string, string>("token", token)
+                        }));
+                    }
                 }
             }
 

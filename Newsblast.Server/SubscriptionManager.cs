@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Newsblast.Shared.Data;
 using Newsblast.Shared.Data.Models;
@@ -10,18 +11,20 @@ namespace Newsblast.Server
 {
     public class SubscriptionManager
     {
+        ILogger Logger;
         DbContextOptions<NewsblastContext> ContextOptions;
         DiscordManager Discord;
 
-        public SubscriptionManager(DbContextOptions<NewsblastContext> contextOptions, DiscordManager discord)
+        public SubscriptionManager(ILogger logger, DbContextOptions<NewsblastContext> contextOptions, DiscordManager discord)
         {
+            Logger = logger;
             ContextOptions = contextOptions;
             Discord = discord;
         }
 
         public async Task UpdateAsync(int maxParallelUpdates)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Updating subscriptions...");
+            Logger.LogInformation("Updating subscriptions.");
 
             try
             {
@@ -52,20 +55,17 @@ namespace Newsblast.Server
                     await Task.WhenAll(updates);
                 }
 
-                Console.WriteLine($"{DateTime.Now.ToString()} - Subscriptions processed: {subscriptions.Count().ToString()}");
+                Logger.LogInformation($"Subscriptions processed: {subscriptions.Count().ToString()}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to process subscriptions...");
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.LogError(ex, "Failed to process subscriptions.");
             }
         }
 
         async Task UpdateSubscriptionAsync(Subscription subscription)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Subscription updating: {subscription.Source.Name} -> {subscription.ChannelId}");
+            Logger.LogInformation($"Subscription updating: {subscription.Source.Name} -> {subscription.ChannelId}");
 
             try
             {
@@ -108,14 +108,11 @@ namespace Newsblast.Server
                     await context.SaveChangesAsync();
                 }
 
-                Console.WriteLine($"{DateTime.Now.ToString()} - Subscription updated: {subscription.Source.Name} -> {subscription.ChannelId.ToString()}");
+                Logger.LogInformation($"Subscription updated: {subscription.Source.Name} -> {subscription.ChannelId.ToString()}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to update subscription: {subscription.Source.Name} -> {subscription.ChannelId.ToString()}");
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.LogError(ex, $"Failed to update subscription: {subscription.Source.Name} -> {subscription.ChannelId.ToString()}");
             }
         }
 

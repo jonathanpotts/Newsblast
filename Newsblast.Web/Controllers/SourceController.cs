@@ -147,15 +147,17 @@ namespace Newsblast.Web.Controllers
                 return NotFound();
             }
 
-            var client = new HttpClient();
-            var response = await client.GetAsync(embed.ImageUrl);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            using (var client = new HttpClient())
             {
-                return StatusCode((int)response.StatusCode);
-            }
+                var response = await client.GetAsync(embed.ImageUrl);
 
-            return new FileStreamResult(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType.MediaType);
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    return StatusCode((int)response.StatusCode);
+                }
+
+                return new FileStreamResult(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType.MediaType);
+            }
         }
     }
 }

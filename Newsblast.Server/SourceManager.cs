@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
@@ -17,16 +18,18 @@ namespace Newsblast.Server
         const int MaxDescriptionLength = 256;
         const int MaxEmbeds = 20;
 
+        ILogger Logger;
         DbContextOptions<NewsblastContext> ContextOptions;
 
-        public SourceManager(DbContextOptions<NewsblastContext> contextOptions)
+        public SourceManager(ILogger logger, DbContextOptions<NewsblastContext> contextOptions)
         {
+            Logger = logger;
             ContextOptions = contextOptions;
         }
 
         public async Task UpdateAsync(int maxParallelUpdates)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Updating sources...");
+            Logger.LogInformation("Updating sources.");
 
             try
             {
@@ -58,20 +61,17 @@ namespace Newsblast.Server
                     await Task.WhenAll(updates);
                 }
 
-                Console.WriteLine($"{DateTime.Now.ToString()} - Sources processed: {sources.Count()}");
+                Logger.LogInformation($"Sources processed: {sources.Count()}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to process sources...");
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.LogError(ex, "Failed to process sources.");
             }
         }
 
         async Task UpdateEmbedsAsync(Source source)
         {
-            Console.WriteLine($"{DateTime.Now.ToString()} - Source updating: { source.Name }");
+            Logger.LogInformation($"Source updating: {source.Name}");
 
             try
             {
@@ -136,14 +136,11 @@ namespace Newsblast.Server
                     await context.SaveChangesAsync();
                 }
 
-                Console.WriteLine($"{DateTime.Now.ToString()} - Source updated: {source.Name}");
+                Logger.LogInformation($"Source updated: {source.Name}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{DateTime.Now.ToString()} - Failed to update source: {source.Name}");
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                Logger.LogError(ex, $"Failed to update source: {source.Name}");
             }
         }
     }
