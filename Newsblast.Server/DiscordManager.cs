@@ -103,7 +103,7 @@ namespace Newsblast.Server
 
                 Logger.LogWarning(ex, $"Discord client disconnected. Waiting for {TimeoutInSeconds} seconds to allow Discord time to reconnect.");
 
-                Task.Delay(TimeoutInSeconds * 1000, CancellationToken.Token).ContinueWith(async _ =>
+                Task.Delay(TimeSpan.FromSeconds(TimeoutInSeconds), CancellationToken.Token).ContinueWith(async _ =>
                 {
                     while (AwaitingReconnect)
                     {

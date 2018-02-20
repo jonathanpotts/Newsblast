@@ -180,7 +180,7 @@ namespace Newsblast.Server
                     await sources.UpdateAsync(MaxParallelUpdates);
                     await subscriptions.UpdateAsync(MaxParallelUpdates);
                 }),
-                Task.Delay(new TimeSpan(0, Constants.TimeBetweenUpdatesInMinutes, 0)));
+                Task.Delay(TimeSpan.FromMinutes(Constants.TimeBetweenUpdatesInMinutes)));
             }
         }
     }
