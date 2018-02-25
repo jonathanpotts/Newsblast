@@ -1,4 +1,5 @@
 ﻿using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Discord;
@@ -6,6 +7,7 @@ using Discord;
 namespace Newsblast.Web.Controllers
 {
     [Route("bot")]
+    [Authorize]
     public class BotController : Controller
     {
         IConfiguration Configuration;

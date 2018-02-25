@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Discord.Rest;
@@ -11,7 +12,9 @@ using Newsblast.Web.Services;
 
 namespace Newsblast.Web.Controllers
 {
+
     [Route("channel")]
+    [Authorize]
     public class ChannelController : Controller
     {
         NewsblastContext Context;

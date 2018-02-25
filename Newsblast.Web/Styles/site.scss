@@ -85,11 +85,11 @@ table {
     box-shadow: none !important;
     outline: none !important;
 
-    &::placeholder {
+    &::-webkit-input-placeholder {
         color: $placeholder-color !important;
     }
 
-    &::-webkit-input-placeholder {
+    &::-moz-placeholder {
         color: $placeholder-color !important;
     }
 

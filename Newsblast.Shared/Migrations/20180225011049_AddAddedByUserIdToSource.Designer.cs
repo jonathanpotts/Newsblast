@@ -11,9 +11,10 @@ using System;
 namespace Newsblast.Shared.Migrations
 {
     [DbContext(typeof(NewsblastContext))]
-    partial class NewsblastContextModelSnapshot : ModelSnapshot
+    [Migration("20180225011049_AddAddedByUserIdToSource")]
+    partial class AddAddedByUserIdToSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

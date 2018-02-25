@@ -10,6 +10,7 @@ using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
 using Newsblast.Shared.Data;
 using Newsblast.Shared.Data.Models;
+using Newsblast.Web.Services;
 using Newsblast.Web.Models.ViewModels;
 
 namespace Newsblast.Web.Controllers
@@ -19,10 +20,12 @@ namespace Newsblast.Web.Controllers
     public class SourceController : Controller
     {
         NewsblastContext Context;
+        DiscordUserClient UserClient;
 
-        public SourceController(NewsblastContext context)
+        public SourceController(NewsblastContext context, DiscordUserClient userClient)
         {
             Context = context;
+            UserClient = userClient;
         }
 
         [Route("")]
@@ -120,11 +123,20 @@ namespace Newsblast.Web.Controllers
                     return View();
                 }
 
+                var client = await UserClient.GetRestClientAsync();
+                var userId = client.CurrentUser?.Id;
+
+                if (userId == null)
+                {
+                    ModelState.AddModelError("", "The current user session is invalid.");
+                }
+
                 var source = await Context.Sources.AddAsync(new Source()
                 {
                     Name = name,
                     Url = url,
-                    FeedUrl = model.FeedUrl
+                    FeedUrl = model.FeedUrl,
+                    AddedByUserId = userId.Value
                 });
 
                 await Context.SaveChangesAsync();

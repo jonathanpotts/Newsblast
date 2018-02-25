@@ -39,9 +39,9 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
   border-color: #484b51 !important;
   box-shadow: none !important;
   outline: none !important; }
-  .form-control::placeholder {
-    color: #7e8084 !important; }
   .form-control::-webkit-input-placeholder {
+    color: #7e8084 !important; }
+  .form-control::-moz-placeholder {
     color: #7e8084 !important; }
   .form-control:-ms-input-placeholder {
     color: #7e8084 !important; }
