@@ -1,8 +1,11 @@
 ﻿@inject DiscordUserClient discordUserClient
 
-@if (User.Identity.IsAuthenticated)
-{
+@{
     var client = await discordUserClient.GetRestClientAsync();
+}
+
+@if (client != null)
+{
     var user = client.CurrentUser;
 
     <span class="navbar-text">Logged in as: @user.Username#@user.Discriminator</span>
@@ -13,5 +16,4 @@
             </li>
         </ul>
     </form>
-
 }

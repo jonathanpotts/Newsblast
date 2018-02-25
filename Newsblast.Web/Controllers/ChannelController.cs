@@ -139,6 +139,11 @@ namespace Newsblast.Web.Controllers
         [NonAction]
         public async Task<Channel> GetChannelAsync(ulong id)
         {
+            if (UserClient == null)
+            {
+                Challenge();
+            }
+
             var botClient = await BotClient.GetRestClientAsync();
 
             try

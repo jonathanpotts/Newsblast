@@ -16,19 +16,16 @@ namespace Newsblast.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                var token = User.Claims.Where(e => e.Type == "urn:discord:token").FirstOrDefault()?.Value;
+            var token = await HttpContext.GetTokenAsync("access_token");
 
-                if (token != null)
+            if (token != null)
+            {
+                using (var client = new HttpClient())
                 {
-                    using (var client = new HttpClient())
+                    await client.PostAsync("https://discordapp.com/api/oauth2/token/revoke", new FormUrlEncodedContent(new[]
                     {
-                        await client.PostAsync("https://discordapp.com/api/oauth2/token/revoke", new FormUrlEncodedContent(new[]
-                        {
-                            new KeyValuePair<string, string>("token", token)
-                        }));
-                    }
+                        new KeyValuePair<string, string>("token", token)
+                    }));
                 }
             }
 

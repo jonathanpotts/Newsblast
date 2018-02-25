@@ -1,4 +1,10 @@
-﻿@{
-    ViewData["Title"] = "Home";
-}
-
+﻿<div class="jumbotron">
+    <h1 class="display-4">Welcome to Newsblast!</h1>
+    <p class="lead">Newsblast is a bot for Discord that sends new articles from RSS feeds to your servers' channels.</p>
+    <hr class="my-4">
+    <p>To get started, connect your servers or check out the available feeds or add new ones (logging in via Discord is required).</p>
+    <p class="lead">
+        <a asp-area="" asp-controller="Guild" asp-action="Index" class="btn btn-primary btn-lg" role="button">Servers</a>
+        <a asp-area="" asp-controller="Source" asp-action="Index" class="btn btn-primary btn-lg" role="button">Feeds</a>
+    </p>
+</div>

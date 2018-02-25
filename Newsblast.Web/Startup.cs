@@ -1,4 +1,6 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
@@ -10,6 +12,8 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Discord;
+using Discord.Rest;
 using Newsblast.Shared.Data;
 using Newsblast.Web.Services;
 
@@ -62,12 +66,32 @@ namespace Newsblast.Web
                 options.Scope.Add("identify");
                 options.Scope.Add("guilds");
 
+                options.SaveTokens = true;
+
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = context =>
+                    OnRemoteFailure = context =>
                     {
-                        context.Identity.AddClaim(new Claim("urn:discord:token", context.AccessToken));
+                        context.Response.Clear();
+                        context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+
                         return Task.CompletedTask;
+                    },
+                    OnCreatingTicket = async context =>
+                    {
+                        using (var discord = new DiscordRestClient())
+                        {
+                            try
+                            {
+                                await discord.LoginAsync(TokenType.Bearer, context.AccessToken);
+
+                                context.Identity.AddClaim(new Claim(ClaimTypes.Sid, discord.CurrentUser.Id.ToString()));
+                            }
+                            catch (Exception ex)
+                            {
+                                context.Fail(ex);
+                            }
+                        }
                     }
                 };
             });
@@ -91,10 +115,8 @@ namespace Newsblast.Web
                 app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
+
+            app.UseStatusCodePagesWithReExecute("/error/{0}");
 
             app.UseStaticFiles();
 

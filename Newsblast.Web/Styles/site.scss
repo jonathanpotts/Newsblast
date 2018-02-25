@@ -1,6 +1,10 @@
-﻿$color: #fff;
+﻿$color: #b9babc;
 $bg-color: #36393e;
+$heading-color: #fff;
 $link-color: #00a6ff;
+$code-color: #839496;
+$code-bg-color: #2f3136;
+$code-border-color: #282b30;
 $danger-color: #f04542;
 $nav-bg-color: #202225;
 $btn-bg-color: #7289da;
@@ -34,11 +38,19 @@ a {
 }
 
 h1, h2 {
+    color: $heading-color !important;
+
     a {
         &:link, &:hover, &:focus, &:active, &:visited {
-            color: $color !important;
+            color: $heading-color !important;
         }
     }
+}
+
+code {
+    color: $code-color !important;
+    background-color: $code-bg-color !important;
+    border: 1px solid $code-border-color !important;
 }
 
 table {
@@ -57,6 +69,7 @@ table {
 
 .btn {
     &.btn-primary {
+        color: $heading-color !important;
         background-color: $btn-bg-color !important;
         border-color: $btn-bg-color !important;
         box-shadow: none !important;
@@ -76,6 +89,12 @@ table {
     &.btn-link {
         transition: none !important;
     }
+}
+
+.jumbotron {
+    color: $color;
+    background-color: $embed-bg-color;
+    border: 1px solid $embed-border-color;
 }
 
 .form-control {
@@ -147,11 +166,11 @@ table {
     border: 1px solid $embed-border-color;
 
     .discord-embed-author {
-        color: $color;
+        color: $heading-color;
 
         a {
             &:link, &:hover, &:focus, &:active, &:visited {
-                color: $color;
+                color: $heading-color;
             }
         }
     }

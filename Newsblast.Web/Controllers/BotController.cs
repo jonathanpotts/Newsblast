@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Net;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -29,8 +30,13 @@ namespace Newsblast.Web.Controllers
         }
 
         [Route("connected")]
-        public IActionResult Connected(ulong guild_id)
+        public IActionResult Connected(ulong guild_id = 0)
         {
+            if (guild_id == 0)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden);
+            }
+
             return RedirectToAction("Inspect", "Guild", new { id = guild_id });
         }
     }
