@@ -39,9 +39,7 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
     border-color: #5b6eae !important; }
 
 .btn.btn-link {
-  transition: none !important;
-  padding: 0;
-  border: none; }
+  transition: none !important; }
 
 .jumbotron {
   color: #b9babc;
@@ -76,6 +74,9 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
     border-color: #2f3237 !important; }
   .table-dark.table-striped tbody tr:nth-of-type(2n+1) {
     background-color: #32363b !important; }
+  .table-dark .btn.btn-link {
+    padding: 0;
+    border: 0; }
 
 .small-icon {
   background-color: #7289da;

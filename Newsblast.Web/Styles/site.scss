@@ -88,8 +88,6 @@ table {
 
     &.btn-link {
         transition: none !important;
-        padding: 0;
-        border: none;
     }
 }
 
@@ -145,6 +143,13 @@ table {
             &:nth-of-type(2n+1) {
                 background-color: $embed-bg-color !important;
             }
+        }
+    }
+
+    .btn {
+        &.btn-link {
+            padding: 0;
+            border: 0;
         }
     }
 }
