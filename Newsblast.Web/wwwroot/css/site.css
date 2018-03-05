@@ -39,7 +39,9 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
     border-color: #5b6eae !important; }
 
 .btn.btn-link {
-  transition: none !important; }
+  transition: none !important;
+  padding: 0;
+  border: none; }
 
 .jumbotron {
   color: #b9babc;

@@ -27,6 +27,11 @@
             {
                 <tr>
                     <td><a asp-area="" asp-controller="Source" asp-action="Inspect" asp-route-id="@sub.Source.Id">@sub.Source.Name</a></td>
+                    <td>
+                        <form asp-action="Unsubscribe" asp-route-id="@sub.Id" method="post">
+                            <button type="submit" class="btn btn-link text-danger">Unsubscribe</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

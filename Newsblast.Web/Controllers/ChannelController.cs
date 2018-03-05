@@ -106,7 +106,7 @@ namespace Newsblast.Web.Controllers
                         return View(model);
                     }
 
-                    if (channel.Subscriptions.Where(e => e.SourceId == model.SourceId).FirstOrDefault() != null)
+                    if (channel.Subscriptions.FirstOrDefault(e => e.SourceId == model.SourceId) != null)
                     {
                         ModelState.AddModelError("SourceId", "The specified feed has already been subscribed to by this channel.");
 
@@ -129,6 +129,50 @@ namespace Newsblast.Web.Controllers
                 model.Channel = channel;
                 model.Sources = await Context.Sources.ToListAsync();
                 return View(model);
+            }
+            catch (AuthenticationException)
+            {
+                return Unauthorized();
+            }
+        }
+
+        [HttpPost]
+        [Route("unsubscribe/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unsubscribe(string id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var subscription = Context.Subscriptions.FirstOrDefault(e => e.Id == id);
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var channelId = subscription.ChannelId;
+
+                var channel = await GetChannelAsync(channelId);
+
+                if (channel == null)
+                {
+                    return NotFound();
+                }
+
+                if (ModelState.IsValid)
+                {
+                    Context.Subscriptions.Remove(subscription);
+                    await Context.SaveChangesAsync();
+
+                    return RedirectToAction("Index", new { id = channelId });
+                }
+
+                return BadRequest();
             }
             catch (AuthenticationException)
             {

@@ -151,8 +151,7 @@ namespace Newsblast.Web.Controllers
         public async Task<IActionResult> Image(string embedId)
         {
             var embed = Context.Embeds
-                .Where(e => e.Id == embedId)
-                .FirstOrDefault();
+                .FirstOrDefault(e => e.Id == embedId);
 
             if (embed == null || embed.ImageUrl == null)
             {
