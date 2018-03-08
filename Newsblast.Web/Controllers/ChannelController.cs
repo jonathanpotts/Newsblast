@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -97,7 +98,8 @@ namespace Newsblast.Web.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    if (Context.Sources.FirstOrDefault(e => e.Id == model.SourceId) == null)
+                    var source = Context.Sources.FirstOrDefault(e => e.Id == model.SourceId);
+                    if (source == null)
                     {
                         ModelState.AddModelError("SourceId", "The specified feed does not exist.");
 
@@ -123,6 +125,16 @@ namespace Newsblast.Web.Controllers
 
                     await Context.SaveChangesAsync();
 
+                    try
+                    {
+                        var client = await BotClient.GetRestClientAsync();
+                        var discordChannel = await client.GetChannelAsync(id) as RestTextChannel;
+                        await discordChannel.SendMessageAsync($"This channel has been subscribed to **{source.Name}**.");
+                    }
+                    catch (Exception)
+                    {
+                    }
+
                     return RedirectToAction("Index", new { id });
                 }
 
@@ -146,7 +158,7 @@ namespace Newsblast.Web.Controllers
                 return NotFound();
             }
 
-            var subscription = Context.Subscriptions.FirstOrDefault(e => e.Id == id);
+            var subscription = Context.Subscriptions.Include(e => e.Source).FirstOrDefault(e => e.Id == id);
 
             if (subscription == null)
             {
@@ -168,6 +180,16 @@ namespace Newsblast.Web.Controllers
                 {
                     Context.Subscriptions.Remove(subscription);
                     await Context.SaveChangesAsync();
+
+                    try
+                    {
+                        var client = await BotClient.GetRestClientAsync();
+                        var discordChannel = await client.GetChannelAsync(subscription.ChannelId) as RestTextChannel;
+                        await discordChannel.SendMessageAsync($"This channel has been unsubscribed from **{subscription.Source.Name}**.");
+                    }
+                    catch (Exception)
+                    {
+                    }
 
                     return RedirectToAction("Index", new { id = channelId });
                 }
