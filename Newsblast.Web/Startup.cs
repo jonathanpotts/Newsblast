@@ -74,6 +74,7 @@ namespace Newsblast.Web
                     {
                         context.Response.Clear();
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                        context.HandleResponse();
 
                         return Task.CompletedTask;
                     },
