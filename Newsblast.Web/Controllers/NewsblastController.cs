@@ -28,10 +28,18 @@ namespace Newsblast.Web.Controllers
         }
 
         [NonAction]
-        public IActionResult LogoutWithRedirect()
+        public IActionResult LogoutWithRedirect(string redirectUrl = null)
         {
             LogoutAsync().Wait();
-            return RedirectToAction("Relay", "Home", new { url = Request.Path + Request.QueryString });
+
+            if (redirectUrl == null)
+            {
+                return RedirectToAction("Relay", "Home", new { url = Request.Path + Request.QueryString });
+            }
+            else
+            {
+                return RedirectToAction("Relay", "Home", new { url = redirectUrl });
+            }
         }
     }
 }

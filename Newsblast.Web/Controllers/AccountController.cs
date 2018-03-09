@@ -15,7 +15,7 @@ namespace Newsblast.Web.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
-            return LogoutWithRedirect();
+            return LogoutWithRedirect(Url.Action("Index", "Home"));
         }
     }
 }
