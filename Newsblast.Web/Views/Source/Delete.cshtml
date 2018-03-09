@@ -1,0 +1,17 @@
+﻿@model Source
+@{
+    ViewData["Title"] = $"Delete {Model.Name}";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>Deleting <strong>@Model.Name</strong> will also delete all subscriptions for it. <span class="text-danger"><strong>This action is permanent.</strong></span></p>
+<p>Are you sure that you want to delete <strong>@Model.Name</strong>?</p>
+<form method="post">
+    <button type="submit" class="btn btn-danger">Delete</button> <a asp-action="Inspect" asp-route-id="@Model.Id" class="btn btn-primary">Cancel</a>
+</form>
+
+@section Scripts
+{
+    @Html.Partial("_ValidationScriptsPartial")
+}

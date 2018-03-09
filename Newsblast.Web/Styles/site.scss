@@ -5,7 +5,9 @@ $link-color: #00a6ff;
 $code-color: #839496;
 $code-bg-color: #2f3136;
 $code-border-color: #282b30;
-$danger-color: #f04542;
+$danger-color: #f04747;
+$danger-hover-color: #d84040;
+$danger-active-color: #c03939;
 $nav-bg-color: #202225;
 $btn-bg-color: #7289da;
 $btn-hover-bg-color: #677bc4;
@@ -86,6 +88,24 @@ table {
         }
     }
 
+    &.btn-danger {
+        color: $heading-color !important;
+        background-color: $danger-color !important;
+        border-color: $danger-color !important;
+        box-shadow: none !important;
+        outline: none !important;
+
+        &:hover, &:focus {
+            background-color: $danger-hover-color !important;
+            border-color: $danger-hover-color !important;
+        }
+
+        &:active {
+            background-color: $danger-active-color !important;
+            border-color: $danger-active-color !important;
+        }
+    }
+
     &.btn-link {
         transition: none !important;
     }
@@ -124,6 +144,10 @@ table {
 
 .text-danger {
     color: $danger-color !important;
+
+    &:link, &:hover, &:focus, &:active, &:visited {
+        color: $danger-color !important;
+    }
 }
 
 .table-icons {

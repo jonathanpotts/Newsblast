@@ -38,6 +38,19 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
     background-color: #5b6eae !important;
     border-color: #5b6eae !important; }
 
+.btn.btn-danger {
+  color: #fff !important;
+  background-color: #f04747 !important;
+  border-color: #f04747 !important;
+  box-shadow: none !important;
+  outline: none !important; }
+  .btn.btn-danger:hover, .btn.btn-danger:focus {
+    background-color: #d84040 !important;
+    border-color: #d84040 !important; }
+  .btn.btn-danger:active {
+    background-color: #c03939 !important;
+    border-color: #c03939 !important; }
+
 .btn.btn-link {
   transition: none !important; }
 
@@ -63,7 +76,9 @@ table a:link, table a:hover, table a:focus, table a:active, table a:visited {
     border-color: #5b6eae !important; }
 
 .text-danger {
-  color: #f04542 !important; }
+  color: #f04747 !important; }
+  .text-danger:link, .text-danger:hover, .text-danger:focus, .text-danger:active, .text-danger:visited {
+    color: #f04747 !important; }
 
 .table-icons {
   line-height: 32px; }
