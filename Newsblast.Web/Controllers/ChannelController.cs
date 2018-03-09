@@ -16,7 +16,7 @@ namespace Newsblast.Web.Controllers
 
     [Route("channel")]
     [Authorize]
-    public class ChannelController : Controller
+    public class ChannelController : NewsblastController
     {
         NewsblastContext Context;
         DiscordBotClient BotClient;
@@ -49,6 +49,10 @@ namespace Newsblast.Web.Controllers
 
                 return View(model);
             }
+            catch (InvalidCredentialException)
+            {
+                return LogoutWithRedirect();
+            }
             catch (AuthenticationException)
             {
                 return Unauthorized();
@@ -75,6 +79,10 @@ namespace Newsblast.Web.Controllers
                 };
 
                 return View(model);
+            }
+            catch (InvalidCredentialException)
+            {
+                return LogoutWithRedirect();
             }
             catch (AuthenticationException)
             {
@@ -142,6 +150,10 @@ namespace Newsblast.Web.Controllers
                 model.Sources = await Context.Sources.ToListAsync();
                 return View(model);
             }
+            catch (InvalidCredentialException)
+            {
+                return LogoutWithRedirect();
+            }
             catch (AuthenticationException)
             {
                 return Unauthorized();
@@ -196,6 +208,10 @@ namespace Newsblast.Web.Controllers
 
                 return BadRequest();
             }
+            catch (InvalidCredentialException)
+            {
+                return LogoutWithRedirect();
+            }
             catch (AuthenticationException)
             {
                 return Unauthorized();
@@ -205,9 +221,11 @@ namespace Newsblast.Web.Controllers
         [NonAction]
         public async Task<Channel> GetChannelAsync(ulong id)
         {
-            if (UserClient == null)
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
             {
-                Challenge();
+                throw new InvalidCredentialException();
             }
 
             var botClient = await BotClient.GetRestClientAsync();
@@ -216,7 +234,7 @@ namespace Newsblast.Web.Controllers
             {
                 var botChannel = await botClient.GetChannelAsync(id) as RestTextChannel;
 
-                var userClient = await UserClient.GetRestClientAsync();
+                
                 var userGuild = (await userClient.GetGuildSummariesAsync().Single()).FirstOrDefault(e => e.Id == botChannel.GuildId);
 
                 if (userGuild == null)

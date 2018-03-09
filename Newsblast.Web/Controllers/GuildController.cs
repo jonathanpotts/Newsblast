@@ -10,7 +10,7 @@ namespace Newsblast.Web.Controllers
 {
     [Route("guild")]
     [Authorize]
-    public class GuildController : Controller
+    public class GuildController : NewsblastController
     {
         DiscordUserClient UserClient;
         DiscordBotClient BotClient;
@@ -27,6 +27,11 @@ namespace Newsblast.Web.Controllers
             var guilds = new List<Guild>();
 
             var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
 
             var discordGuilds = (await userClient.GetGuildSummariesAsync().First());
 
@@ -48,6 +53,11 @@ namespace Newsblast.Web.Controllers
         public async Task<IActionResult> Inspect(ulong id)
         {
             var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
 
             var userGuild = (await userClient.GetGuildSummariesAsync().First()).FirstOrDefault(e => e.Id == id);
 

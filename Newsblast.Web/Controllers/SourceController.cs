@@ -17,7 +17,7 @@ namespace Newsblast.Web.Controllers
 {
     [Route("source")]
     [Authorize]
-    public class SourceController : Controller
+    public class SourceController : NewsblastController
     {
         NewsblastContext Context;
         DiscordUserClient UserClient;
@@ -31,14 +31,28 @@ namespace Newsblast.Web.Controllers
         [Route("")]
         public async Task<IActionResult> Index()
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             var sources = await Context.Sources.ToListAsync();
 
             return View(sources);
         }
 
         [Route("{id}")]
-        public IActionResult Inspect(string id)
+        public async Task<IActionResult> Inspect(string id)
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             var source = Context.Sources
                 .Include(e => e.Embeds)
                 .FirstOrDefault(e => e.Id == id);
@@ -53,8 +67,15 @@ namespace Newsblast.Web.Controllers
 
         [HttpGet]
         [Route("add")]
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             return View();
         }
 
@@ -63,6 +84,13 @@ namespace Newsblast.Web.Controllers
         [Route("add")]
         public async Task<IActionResult> Add(AddSourceViewModel model)
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             if (ModelState.IsValid)
             {
                 if (Context.Sources.FirstOrDefault(e => e.FeedUrl == model.FeedUrl) != null)
@@ -150,6 +178,13 @@ namespace Newsblast.Web.Controllers
         [Route("image/{embedId}")]
         public async Task<IActionResult> Image(string embedId)
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             var embed = Context.Embeds
                 .FirstOrDefault(e => e.Id == embedId);
 

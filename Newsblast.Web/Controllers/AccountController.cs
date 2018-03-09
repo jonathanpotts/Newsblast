@@ -8,29 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace Newsblast.Web.Controllers
 {
     [Authorize]
-    public class AccountController : Controller
+    public class AccountController : NewsblastController
     {
         [Route("logout")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
-            var token = await HttpContext.GetTokenAsync("access_token");
-
-            if (token != null)
-            {
-                using (var client = new HttpClient())
-                {
-                    await client.PostAsync("https://discordapp.com/api/oauth2/token/revoke", new FormUrlEncodedContent(new[]
-                    {
-                        new KeyValuePair<string, string>("token", token)
-                    }));
-                }
-            }
-
-            await HttpContext.SignOutAsync();
-
-            return RedirectToAction("Index", "Home");
+            return LogoutWithRedirect();
         }
     }
 }

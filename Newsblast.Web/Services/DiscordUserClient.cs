@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Http;
 using Discord;
 using Discord.Rest;
 
@@ -13,19 +10,18 @@ namespace Newsblast.Web.Services
     public class DiscordUserClient : IDisposable
     {
         DiscordRestClient RestClient = null;
-        IActionContextAccessor ActionContextAccessor;
+        IHttpContextAccessor HttpContextAccessor;
 
-        public DiscordUserClient(IActionContextAccessor actionContextAccessor)
+        public DiscordUserClient(IHttpContextAccessor httpContextAccessor)
         {
-            ActionContextAccessor = actionContextAccessor;
+            HttpContextAccessor = httpContextAccessor;
         }
 
         public async Task<DiscordRestClient> GetRestClientAsync()
         {
-            var actionContext = ActionContextAccessor.ActionContext;
-            var context = actionContext.HttpContext;
+            var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
 
-            if (context.User.Identity.IsAuthenticated)
+            if (token != null)
             {
                 if (RestClient == null)
                 {
@@ -34,8 +30,6 @@ namespace Newsblast.Web.Services
 
                 if (RestClient.LoginState != LoginState.LoggedIn)
                 {
-                    var token = await context.GetTokenAsync("access_token");
-
                     try
                     {
                         await RestClient.LoginAsync(TokenType.Bearer, token);
@@ -43,7 +37,6 @@ namespace Newsblast.Web.Services
                     catch (Exception)
                     {
                         RestClient = null;
-                        await context.SignOutAsync();
                     }
                 }
             }

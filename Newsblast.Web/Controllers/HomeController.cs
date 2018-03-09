@@ -5,11 +5,17 @@ using Newsblast.Web.Models;
 
 namespace Newsblast.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : NewsblastController
     {
         public IActionResult Index()
         {
             return View();
+        }
+
+        [Route("relay")]
+        public IActionResult Relay(string url)
+        {
+            return Redirect(url);
         }
 
         [Route("error")]

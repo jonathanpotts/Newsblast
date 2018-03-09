@@ -1,26 +1,37 @@
 ﻿using System.Net;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Discord;
+using Newsblast.Web.Services;
 
 namespace Newsblast.Web.Controllers
 {
     [Route("bot")]
     [Authorize]
-    public class BotController : Controller
+    public class BotController : NewsblastController
     {
         IConfiguration Configuration;
+        DiscordUserClient UserClient;
 
-        public BotController(IConfiguration configuration)
+        public BotController(IConfiguration configuration, DiscordUserClient userClient)
         {
             Configuration = configuration;
+            UserClient = userClient;
         }
 
         [Route("connect/{guildId}")]
-        public IActionResult Connect(ulong guildId)
+        public async Task<IActionResult> Connect(ulong guildId)
         {
+            var userClient = await UserClient.GetRestClientAsync();
+
+            if (userClient == null)
+            {
+                return LogoutWithRedirect();
+            }
+
             var clientId = Configuration["DiscordClientId"];
             var permissions = new GuildPermissions(readMessages: true, sendMessages: true, embedLinks: true, attachFiles: true).RawValue;
             var redirectUri = UrlEncoder.Default.Encode(Url.Action("Connected", "Bot", null, Request.Scheme));
