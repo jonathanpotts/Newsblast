@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Discord;
 using Discord.Rest;
 
@@ -11,19 +13,20 @@ namespace Newsblast.Web.Services
     public class DiscordUserClient : IDisposable
     {
         DiscordRestClient RestClient = null;
-        IHttpContextAccessor HttpContextAccessor;
+        IActionContextAccessor ActionContextAccessor;
 
-        public DiscordUserClient(IHttpContextAccessor httpContextAccessor)
+        public DiscordUserClient(IActionContextAccessor actionContextAccessor)
         {
-            HttpContextAccessor = httpContextAccessor;
+            ActionContextAccessor = actionContextAccessor;
         }
 
         public async Task<DiscordRestClient> GetRestClientAsync()
         {
-            if (HttpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            {
-                var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
+            var actionContext = ActionContextAccessor.ActionContext;
+            var context = actionContext.HttpContext;
 
+            if (context.User.Identity.IsAuthenticated)
+            {
                 if (RestClient == null)
                 {
                     RestClient = new DiscordRestClient();
@@ -31,7 +34,17 @@ namespace Newsblast.Web.Services
 
                 if (RestClient.LoginState != LoginState.LoggedIn)
                 {
-                    await RestClient.LoginAsync(TokenType.Bearer, token);
+                    var token = await context.GetTokenAsync("access_token");
+
+                    try
+                    {
+                        await RestClient.LoginAsync(TokenType.Bearer, token);
+                    }
+                    catch (Exception)
+                    {
+                        RestClient = null;
+                        await context.SignOutAsync();
+                    }
                 }
             }
 
