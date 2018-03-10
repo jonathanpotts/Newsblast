@@ -9,7 +9,7 @@ The following settings must be configured before running Newsblast.
 
 ### Newsblast.Server
 
-The configuration for Newsblast.Server is stored in **Newsblast.Server.json**. If the file does not exist, run Newsblast.Server and the file will be created as long as the file permissions are set correctly.
+The configuration for Newsblast.Server is stored in **Newsblast.Server.json**. If the file does not exist, run Newsblast.Server and the file will be created if the file permissions are set correctly.
 
 * **DiscordBotToken**: The bot token for your Discord application. It can be found in the [Discord Developer Portal](https://discordapp.com/developers/applications).
 * **SqlServerConnectionString**: The connection string for the SQL Server database or Azure SQL Database used for storing data for the bot.
@@ -27,7 +27,7 @@ The configuration for Newsblast.Web can be stored in several different locations
 * **DiscordClientId**: The client ID for your Discord application. It can be found in the [Discord Developer Portal](https://discordapp.com/developers/applications).
 * **DiscordClientSecret**: The client secret for your Discord application. It can be found in the [Discord Developer Portal](https://discordapp.com/developers/applications).
 * **DiscordBotToken**: The bot token for your Discord application. It can be found in the [Discord Developer Portal](https://discordapp.com/developers/applications).
-* **AdministratorIds**: A comma-delimited list of the Discord user IDs of the administrators of your application.
+* **AdministratorIds**: A comma-delimited list of the Discord User IDs of the administrators of your application.
 
 ### Using a Different Database Provider
 
@@ -47,4 +47,4 @@ The database connection is handled in **Startup.cs**.
 
 ## Logging
 
-Newsblast.Server saves logging information to **Newsblast.Server.log**. You may wish to prune it every so often to prevent unneccessary storage space usage.
+Newsblast.Server saves logging information to **Newsblast.Server.log**. You may wish to prune it every so often to prevent unnecessary storage space usage.
