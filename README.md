@@ -1,7 +1,7 @@
 # Newsblast
 A [Discord](https://discordapp.com) bot that provides RSS updates.
 
-Uses [.NET Core](https://github.com/dotnet/core) 2.0, [Entity Framework Core](https://github.com/aspnet/EntityFrameworkCore) 2.0, [Discord.Net](https://github.com/RogueException/Discord.Net), and [Html Agility Pack](https://github.com/zzzprojects/html-agility-pack).
+Uses [.NET Core](https://github.com/dotnet/core) 2.1, [Entity Framework Core](https://github.com/aspnet/EntityFrameworkCore) 2.1, [Discord.Net](https://github.com/RogueException/Discord.Net), and [Html Agility Pack](https://github.com/zzzprojects/html-agility-pack).
 
 ## Configuration
 
@@ -16,7 +16,7 @@ The configuration for Newsblast.Server is stored in **Newsblast.Server.json**. I
 
 ### Newsblast.Web
 
-The configuration for Newsblast.Web can be stored in several different locations. Refer to the [ASP.NET Core 2.0 documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?tabs=basicconfiguration) for more information.
+The configuration for Newsblast.Web can be stored in several different locations. Refer to the [ASP.NET Core 2.1 documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?tabs=basicconfiguration&view=aspnetcore-2.1) for more information.
 
 #### Connection Strings
 
@@ -31,7 +31,7 @@ The configuration for Newsblast.Web can be stored in several different locations
 
 ### Using a Different Database Provider
 
-If you do not want to use SQL Server or Azure SQL Database, the source code can be modified to use a different Entity Framework Core 2.0 database provider. Refer to the [Entity Framework Core 2.0 documentation](https://docs.microsoft.com/en-us/ef/core/providers/) for more information.
+If you do not want to use SQL Server or Azure SQL Database, the source code can be modified to use a different Entity Framework Core 2.1 database provider. Refer to the [Entity Framework Core documentation](https://docs.microsoft.com/en-us/ef/core/providers/) for more information.
 
 #### Newsblast.Server
 
