@@ -33,7 +33,7 @@ namespace Newsblast.Web.Controllers
             }
 
             var clientId = Configuration["DiscordClientId"];
-            var permissions = new GuildPermissions(readMessages: true, sendMessages: true, embedLinks: true, attachFiles: true).RawValue;
+            var permissions = new GuildPermissions(viewChannel: true, sendMessages: true, embedLinks: true, attachFiles: true).RawValue;
             var redirectUri = UrlEncoder.Default.Encode(Url.Action("Connected", "Bot", null, Request.Scheme));
 
             string discordUrl = $"https://discordapp.com/api/oauth2/authorize?response_type=code&client_id={clientId}&scope=bot&permissions={permissions}&guild_id={guildId}&redirect_uri={redirectUri}";

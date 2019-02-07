@@ -114,7 +114,6 @@ namespace Newsblast.Web
 
             if (env.IsDevelopment())
             {
-                app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
             }
 
