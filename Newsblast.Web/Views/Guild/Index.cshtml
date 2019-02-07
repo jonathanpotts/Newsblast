@@ -19,7 +19,7 @@ else
             {
                 <tr>
                     <td>
-                        @Html.Partial("_GuildSmallIconPartial", guild)
+                        @Html.PartialAsync("_GuildSmallIconPartial", guild)
                     </td>
                     <td>
                         <a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@guild.Id">@guild.Name</a>

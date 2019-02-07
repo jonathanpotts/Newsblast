@@ -4,7 +4,7 @@
 }
 
 <div class="text-center">
-    @Html.Partial("_GuildLargeIconPartial", Model.Channel.Guild)
+    @Html.PartialAsync("_GuildLargeIconPartial", Model.Channel.Guild)
     <hgroup>
         <h1><a asp-area="" asp-controller="Guild" asp-action="Inspect" asp-route-id="@Model.Channel.Guild.Id">@Model.Channel.Guild.Name</a></h1>
         <h2>#@Model.Channel.Name</h2>
@@ -40,5 +40,5 @@
 
 @section Scripts
 {
-    @Html.Partial("_ValidationScriptsPartial")
+    @Html.PartialAsync("_ValidationScriptsPartial")
 }
