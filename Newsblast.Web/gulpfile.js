@@ -6,11 +6,9 @@ Click here to learn more. https://go.microsoft.com/fwlink/?LinkId=518007
 
 var gulp = require("gulp");
 var sass = require("gulp-sass");
-var cssmin = require("gulp-cssmin");
-var concat = require("gulp-concat");
+var cssmin = require("gulp-clean-css");
 var rename = require("gulp-rename");
 var del = require("del");
-var pump = require("pump");
 
 var paths = {
     webroot: "./wwwroot/",
